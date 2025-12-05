@@ -11,6 +11,7 @@ locals {
 resource "aws_vpc" "main_vpc" {
   cidr_block = var.vpc_cidr
   enable_dns_hostnames = true
+  enable_dns_support   = true
 }
 
  # подсети
@@ -138,7 +139,7 @@ resource "aws_lb" "alb" {
   load_balancer_type = "application"
   internal           = false              # публичный ALB
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = aws_subnet.public_subnet_ids # в публичных подсетях
+  subnets            = aws_subnet.public_subnet[*].id # в публичных подсетях
 }
 
 resource "aws_lb_target_group" "alb_tg" {
@@ -262,7 +263,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.app.name
+          awslogs-group         = aws_cloudwatch_log_group.log_group.name
           awslogs-region        = data.aws_region.current.name
           awslogs-stream-prefix = "go-backend-"
         }
@@ -280,12 +281,12 @@ resource "aws_ecs_service" "ecs_service" {
   desired_count   = 1
 
   network_configuration {
-    subnets          =  aws_subnet.private_subnet_ids  # приватные подсети
+    subnets          =  aws_subnet.private_subnet[*].id  # приватные подсети
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = false
   }
 
-  load_balancer {
+  load_balancer { # alb для сер
     target_group_arn = aws_lb_target_group.alb_tg.arn
     container_name   = "backend-container" //local.app_name
     container_port   = 8080
