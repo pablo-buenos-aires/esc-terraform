@@ -1,0 +1,9 @@
+# Terraform cache and sensitive files
+.terraform/
+*.tfstate
+*.tfstate.backup
+.env
+mykeypair
+.pem
+.key
+.pub
