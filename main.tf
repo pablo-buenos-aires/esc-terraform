@@ -12,7 +12,7 @@ module "ec2" {
   vpc_cidr  = module.vpc.vpc_cidr
   key_name  = aws_key_pair.ssh_aws_key.key_name
   
-  ami_id =  data.aws_ami.ubuntu24_nat // образ с net-persistant
+  ami_id =  data.aws_ami.ubuntu24_nat // об раз с  net-persistant
   // проброс подсетей и групп безопасности
   public_subnet_ids = module.vpc.public_subnet_ids
   private_subnet_ids = module.vpc.private_subnet_ids
