@@ -10,7 +10,7 @@ variable "ecr_repository_url" {
 variable "image_tag" {
   type        = string
   default     = "latest"
-  description = "Docker image tag"
+  description = "Docker image tag, типа v15 или latest"
 }
 
 # БД и другие настройки как env-переменные
