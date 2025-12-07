@@ -26,8 +26,8 @@ resource "aws_security_group" "ecs_sg" { # для ECS tasks
   vpc_id            = var.vpc_id
   # Пускаем трафик на 8080 только от ALB
   ingress {
-    from_port       = 8080
-    to_port         = 8080
+    from_port       = var.service_port
+    to_port         = var.service_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
@@ -42,7 +42,7 @@ resource "aws_security_group" "ecs_sg" { # для ECS tasks
 }
 
 resource "aws_lb" "alb" {
-  name               = "backend-alb"
+  name               = var.alb_name
   load_balancer_type = "application"
   internal           = false              # публичный ALB
   security_groups    = [aws_security_group.alb_sg.id]
@@ -50,7 +50,7 @@ resource "aws_lb" "alb" {
 }
 
 resource "aws_lb_target_group" "alb_tg" {
-  port        = 8080
+  port        = var.service_port
   protocol    = "HTTP"
   target_type = "ip"                      # важно для Fargate
   vpc_id      =  var.vpc_id
@@ -123,7 +123,7 @@ resource "aws_iam_role" "task_role" {
 
 //------------------------------- cluster, task definition и service  для ECS Fargate
 resource "aws_ecs_cluster" "ecs_cluster" {
-    name = "backend-cluster"
+    name = var.ecs_cluster_name
     setting {
     name  = "containerInsights" // CloudWatch Container Insights, логи и метрики
     value = "enabled"
@@ -131,30 +131,31 @@ resource "aws_ecs_cluster" "ecs_cluster" {
 }
 
 data "aws_region" "current" {}
+
 resource "aws_cloudwatch_log_group" "log_group" {
-  name              = "/ecs/backend"
+  name              = var.log_group_name
   retention_in_days = 14
 }
 
 resource "aws_ecs_task_definition" "ecs_task_definition" {
-  family                   = "backend-task"
+   family                   = var.task_family
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"   # 0.25 vCPU
-  memory                   = "512"   # 512 MB
+  cpu                      = var.task_cpu
+  memory                   = var.task_memory
 
   execution_role_arn = aws_iam_role.task_execution_role.arn
   task_role_arn      = aws_iam_role.task_role.arn
 
   container_definitions = jsonencode([
     {
-      name      = "backend-container"
+      name      = var.container_name
       image     = "${var.ecr_repository_url}:${var.image_tag}"
       essential = true
 
       portMappings = [
         {
-          containerPort = 8080
+          containerPort = var.service_port
           protocol      = "tcp"
         }
       ]
@@ -181,11 +182,11 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
 
 
 resource "aws_ecs_service" "ecs_service" {
-  name            = "ecs-service"
+  name            = var.ecs_service_name
   cluster         = aws_ecs_cluster.ecs_cluster.id
   task_definition = aws_ecs_task_definition.ecs_task_definition.arn
   launch_type     = "FARGATE"
-  desired_count   = 1
+  desired_count   = var.desired_count
 
   network_configuration {
     subnets          = var.private_subnet_ids  # приватные подсети
@@ -195,8 +196,8 @@ resource "aws_ecs_service" "ecs_service" {
 
   load_balancer { # alb для сер
     target_group_arn = aws_lb_target_group.alb_tg.arn
-    container_name   = "backend-container" //local.app_name
-    container_port   = 8080
+    container_name   = var.container_name
+    container_port   = var.service_port
   }
   depends_on = [aws_lb_listener.https]
 }

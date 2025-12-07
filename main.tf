@@ -1,3 +1,15 @@
+resource "aws_secretsmanager_secret" "db_credentials" {
+  name = var.db_secret_arn
+}
+
+resource "aws_secretsmanager_secret_version" "db_credentials" {
+  secret_id     = aws_secretsmanager_secret.db_credentials.id
+  secret_string = jsonencode({
+    username = var.db_user
+    password = var.db_password
+    dbname   = var.db_name
+  })
+}
 # ------------------------------------------------------------------------------- /modules
 module "vpc" {
   source  = "modules/vpc"
@@ -31,12 +43,18 @@ module "ecs" {
   vpc_id = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   public_subnet_ids  = module.vpc.public_subnet_ids
+
  
   db_user     = "admin"
   db_password = "Admin12345"
   db_name     = "mydatabase"
-
-  ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend:latest"
+  
+  db_host = var.db_host
+  db_port = var.db_port
+  db_secret_arn = aws_secretsmanager_secret.db_credentials.arn
+  
+  ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend"
+  image_tag         = "latest"
   acm_certificate_arn = "arn:aws:acm:sa-east-1:836940249137:certificate/your-certificate-id"
 }
 
