@@ -5,7 +5,9 @@ module "vpc" {
   public_subnet_cidrs =  ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"] # для каждой подсети должно быть ссответствие azs
   
-  pub_ubuntu_nat = module.ec2.pub_ubuntu_nat // 
+  //pub_ubuntu_nat = module.ec2.pub_ubuntu_nat // 
+  nat_network_interface_id = module.ec2.nat_network_interface_id
+
   vpc_azs = ["sa-east-1a", "sa-east-1b"] # из первого возьмется регион для эндпоинтов ssm
 }
 
@@ -28,10 +30,11 @@ module "ecs" {
   source  = "./modules/ecs"
   vpc_id = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
+  public_subnet_ids  = module.vpc.public_subnet_ids
  
   db_user     = "admin"
   db_password = "Admin12345"
-  db_name     = "mydatabase"      
+  db_name     = "mydatabase"
 
 }
 
@@ -61,21 +64,20 @@ resource "local_file" "file_ssh_pub" {
 # --------------------------------------------------------------------------------------- инстансы
 
 
-/*
+
 # Null resource, который зависим от ASG, и выполняет команду AWS CLI
-resource "null_resource" "get_priv_instances" {
-  depends_on = [aws_autoscaling_group.priv_asg]
+# resource "null_resource" "get_priv_instances" {
+#   depends_on = [aws_autoscaling_group.priv_asg]
 
-  provisioner "local-exec" {
-    command = <<EOT
-      aws autoscaling describe-auto-scaling-groups \
-        --auto-scaling-group-names ${aws_autoscaling_group.priv_asg.name} \
-        --query 'AutoScalingGroups[0].Instances[*].InstanceId' \
-        --output json > asg_instances.json
-    EOT
-  }
-} */
-
+#   provisioner "local-exec" {
+#     command = <<EOT
+#       aws autoscaling describe-auto-scaling-groups \
+#         --auto-scaling-group-names ${aws_autoscaling_group.priv_asg.name} \
+#         --query 'AutoScalingGroups[0].Instances[*].InstanceId' \
+#         --output json > asg_instances.json
+#     EOT
+#   }
+# } 
 
 #--------------------------------------------------------------------------- настройка SSM для инстансов
 resource "aws_iam_role" "ssm_role" { # роль создаем
@@ -102,40 +104,40 @@ resource "aws_iam_instance_profile" "ssm_profile" { # профиль на баз
 }
 
 # для обновления списка инстансов в asg
-resource "terraform_data" "get_priv_instances" {
-  # форсируем замену ресурса на каждом плане/аплае
-  triggers_replace = timestamp()  # <<< меняется каждый apply => ресурс пересоздаётся
-  depends_on = [module.ec2.asg_arn]
+# resource "terraform_data" "get_priv_instances" {
+#   # форсируем замену ресурса на каждом плане/аплае
+#   triggers_replace = timestamp()  # <<< меняется каждый apply => ресурс пересоздаётся
+#   depends_on = [module.ec2.asg_arn]
 
-#   provisioner "local-exec" {
-#     interpreter = ["/bin/bash", "-lc"] # без этого в одну строу команды
-#     command = <<EOT
-# set -euo pipefail
-# aws autoscaling describe-auto-scaling-groups \
-#   --auto-scaling-group-names "${module.ec2.asg_name}" \
-#   --query 'AutoScalingGroups[0].Instances[*].InstanceId' \
-#   --output json > asg_instances.json
+# #   provisioner "local-exec" {
+# #     interpreter = ["/bin/bash", "-lc"] # без этого в одну строу команды
+# #     command = <<EOT
+# # set -euo pipefail
+# # aws autoscaling describe-auto-scaling-groups \
+# #   --auto-scaling-group-names "${module.ec2.asg_name}" \
+# #   --query 'AutoScalingGroups[0].Instances[*].InstanceId' \
+# #   --output json > asg_instances.json
+# # EOT
+# #   }
+# # }
+
+# # for Windows
+# provisioner "local-exec" {
+#   environment = {
+#     AWS_PROFILE = var.iam_user
+#   }
+
+#   interpreter = ["PowerShell", "-Command"]
+#   command     = <<-EOT
+# $ErrorActionPreference = "Stop"
+# aws autoscaling describe-auto-scaling-groups `
+#   --auto-scaling-group-names "${module.ec2.asg_name}" `
+#   --query 'AutoScalingGroups[0].Instances[*].InstanceId' `
+#   --output json |
+#   Out-File -FilePath "asg_instances.json" -Encoding ascii
 # EOT
 #   }
 # }
-
-# for Windows
-provisioner "local-exec" {
-  environment = {
-    AWS_PROFILE = var.iam_user
-  }
-
-  interpreter = ["PowerShell", "-Command"]
-  command     = <<-EOT
-$ErrorActionPreference = "Stop"
-aws autoscaling describe-auto-scaling-groups `
-  --auto-scaling-group-names "${module.ec2.asg_name}" `
-  --query 'AutoScalingGroups[0].Instances[*].InstanceId' `
-  --output json |
-  Out-File -FilePath "asg_instances.json" -Encoding ascii
-EOT
-  }
-}
 
 
 

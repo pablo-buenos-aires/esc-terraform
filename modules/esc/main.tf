@@ -1,6 +1,6 @@
 
 resource "aws_security_group" "alb_sg" { # для ALB
-   vpc_id      = aws_vpc.main_vpc.id
+   vpc_id       = var.vpc_id
    ingress { 
     from_port   = 80
     to_port     = 80
@@ -23,7 +23,7 @@ resource "aws_security_group" "alb_sg" { # для ALB
 }
 
 resource "aws_security_group" "ecs_sg" { # для ECS tasks
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id            = var.vpc_id
   # Пускаем трафик на 8080 только от ALB
   ingress {
     from_port       = 8080
@@ -46,14 +46,14 @@ resource "aws_lb" "alb" {
   load_balancer_type = "application"
   internal           = false              # публичный ALB
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = aws_subnet.public_subnet[*].id # в публичных подсетях
+  subnets            = var.public_subnet_ids # в публичных подсетях
 }
 
 resource "aws_lb_target_group" "alb_tg" {
   port        = 8080
   protocol    = "HTTP"
   target_type = "ip"                      # важно для Fargate
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      =  var.vpc_id
 
   health_check {
     path                = "/health"
@@ -61,8 +61,8 @@ resource "aws_lb_target_group" "alb_tg" {
     matcher             = "200-399"
     interval            = 30
     timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
+    healthy_threshold   = 2 # Количество успешных проверок для признания экземпляра здоровым
+    unhealthy_threshold = 2 # Количество неудачных проверок для признания экземпляра нездоровым
   }
 }
 
@@ -107,17 +107,17 @@ data "aws_iam_policy_document" "ecs_task_assume_role" {
 }
 
 resource "aws_iam_role" "task_execution_role" {
- assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "task_execution_policy" {
   role       = aws_iam_role.task_execution_role.name // -name
-  # эта политика позволяет таскам скачивать образы из ECR и отправлять логи в CloudWatch и др
+ # эта политика позволяет таскам скачивать образы из ECR и отправлять логи в CloudWatch и др
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_role" "task_role" {
-   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
 
 
@@ -188,7 +188,7 @@ resource "aws_ecs_service" "ecs_service" {
   desired_count   = 1
 
   network_configuration {
-    subnets          =  aws_subnet.private_subnet[*].id  # приватные подсети
+    subnets          = var.private_subnet_ids  # приватные подсети
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = false
   }

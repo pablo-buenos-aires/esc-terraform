@@ -35,50 +35,50 @@ fi
 netfilter-persistent save
 systemctl enable --now netfilter-persistent
 EOF
-} //*/
-/*
+} 
+
 # ---------------------------------------------------------- два приватный инстанса в разных зонах доступности
 # шаблон без привязки к подсетям
-resource "aws_launch_template" "l_templ" {
-  name_prefix = "l-templ"
-  #image_id    = data.aws_ami.ubuntu_24.id
-  image_id = "ami-0cdd87dc388f1f6e1"
-  instance_type = var.instance_type
-  #key_name = aws_key_pair.ssh_aws_key.key_name
-  key_name = var.key_name
- # нужен блок
-  iam_instance_profile { name = var.instance_profile_name }
-  vpc_security_group_ids = [var.private_sg_id]
+# resource "aws_launch_template" "l_templ" {
+#   name_prefix = "l-templ"
+#   #image_id    = data.aws_ami.ubuntu_24.id
+#   image_id = "ami-0cdd87dc388f1f6e1"
+#   instance_type = var.instance_type
+#   #key_name = aws_key_pair.ssh_aws_key.key_name
+#   key_name = var.key_name
+#  # нужен блок
+#   iam_instance_profile { name = var.instance_profile_name }
+#   vpc_security_group_ids = [var.private_sg_id]
 
-  #network_interfaces { security_groups = [aws_security_group.private_sg.id] }
-}
-//*/
-/*
+#   #network_interfaces { security_groups = [aws_security_group.private_sg.id] }
+# }
+
+
 # -------------------------------------------------------------------------- Asg
-resource "aws_autoscaling_group" "priv_asg" {
-  name = "priv-asg"
-  min_size   = 2
-  desired_capacity = 2
-  max_size  = 2
-  health_check_type  = "EC2" # проверка доступности инстанса
-  health_check_grace_period = 120 # время на инит, потом проверка доступности
-  capacity_rebalance  = true # если зона отвалится, на других сделает инстансы
+# resource "aws_autoscaling_group" "priv_asg" {
+#   name = "priv-asg"
+#   min_size   = 2
+#   desired_capacity = 2
+#   max_size  = 2
+#   health_check_type  = "EC2" # проверка доступности инстанса
+#   health_check_grace_period = 120 # время на инит, потом проверка доступности
+#   capacity_rebalance  = true # если зона отвалится, на других сделает инстансы
 
-  wait_for_capacity_timeout = "10m" # для терраформ, чтобы  ожидать перехода asg в нужное состояние
-  # приватные подсети!! (subnets_id, не зоны доступности). Каждая приватная сеть в своей зоне
-  vpc_zone_identifier = var.private_subnet_ids
+#   wait_for_capacity_timeout = "10m" # для терраформ, чтобы  ожидать перехода asg в нужное состояние
+#   # приватные подсети!! (subnets_id, не зоны доступности). Каждая приватная сеть в своей зоне
+#   vpc_zone_identifier = var.private_subnet_ids
 
-  # привязка Launch Template
-  launch_template {
-    id      = aws_launch_template.l_templ.id
-    version = aws_launch_template.l_templ.latest_version
-  }
-  # в каком порядке завершать инстансы при уменьшении
-  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"] # старые и где оплаченые часы меньше
+#   # привязка Launch Template
+#   launch_template {
+#     id      = aws_launch_template.l_templ.id
+#     version = aws_launch_template.l_templ.latest_version
+#   }
+#   # в каком порядке завершать инстансы при уменьшении
+#   termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"] # старые и где оплаченые часы меньше
 
-  depends_on = [var.private_subnet_ids]         # чтобы SSM работал
- # depends_on = [var.vpc_id] # Terraform поймет зависимость через входную переменную
-}
-*/
+#   depends_on = [var.private_subnet_ids]         # чтобы SSM работал
+#  # depends_on = [var.vpc_id] # Terraform поймет зависимость через входную переменную
+# }
+
 
 

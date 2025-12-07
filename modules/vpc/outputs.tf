@@ -2,7 +2,7 @@
 # -------------------------------------------- переменные для доступа из др. модулей
 output "vpc_id" { value = aws_vpc.main_vpc.id }
 output "vpc_cidr" { value = aws_vpc.main_vpc.cidr_block}
-output "igw_id" { value = aws_internet_gateway.igw.id }
+output "igw_id" { value = aws_internet_gateway.igw.id}
 
 # зоны доступности для asg - такие де, как для vpc, проброс входа
 output "vpc_asg_azs" {  value = var.vpc_azs }
@@ -19,8 +19,8 @@ output "private_rt_ass_ids" {  value = aws_route_table_association.rt_priv_ass[*
 
 
 # таблицы и маршруты
-output "public_rt_id" { value  = aws_route_table.rt_pub }
-output "private_rt_id" { value  = aws_route_table.rt_priv }
+output "public_rt_id" { value  = aws_route_table.rt_pub.id }
+output "private_rt_id" { value  = aws_route_table.rt_priv.id }
 # вывод  маршрутов
 output "rt_pub_routes" {  value = aws_route_table.rt_pub.route }  # вывод маршрутов
 output "rt_priv_routes" {  value = aws_route_table.rt_priv.route }
@@ -28,7 +28,7 @@ output "rt_priv_routes" {  value = aws_route_table.rt_priv.route }
 output "ssm_interface_endpoints" { # вывод эндпоинто
   value = {
     for k, endp in aws_vpc_endpoint.endpoints: # генератор k -> ключ словаря
-    k => { # значения списком
+     # значения спискомk => {
       id           = endp.id
       service      = endp.service_name
       # dns_names    = endp.dns_entry[*].dns_name

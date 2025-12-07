@@ -27,8 +27,8 @@ data "aws_ami" "ubuntu24_nat" { // образ для НАТ инстанса с 
 
 # Чтение файла через data
 
-data "local_file" "asg_instances_file" {
-  depends_on = [terraform_data.get_priv_instances] # это esource с provisioner, write to file
-  filename   = "asg_instances.json"
-}
+# data "local_file" "asg_instances_file" {
+#   depends_on = [terraform_data.get_priv_instances] # это esource с provisioner, write to file
+#   filename   = "asg_instances.json"
+# }
 

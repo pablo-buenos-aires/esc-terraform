@@ -21,3 +21,13 @@ variable "db_password" { type = string }
 variable "db_name"     { type = string }
 
 variable "vpc_id"     { type = string }
+
+variable "public_subnet_ids" {
+  type        = list(string)
+  description = "Публичные подсети для ALB"
+}
+
+variable "private_subnet_ids" {
+  type        = list(string)
+  description = "Приватные подсети для ECS"
+}
