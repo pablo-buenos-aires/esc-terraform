@@ -14,3 +14,4 @@ variable "key_name"          { type = string }
 variable "instance_profile_name" { type = string}
 // for nat
 variable "vpc_cidr"             { type = string }
+

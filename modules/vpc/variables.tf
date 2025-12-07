@@ -31,4 +31,8 @@ variable "private_subnet_cidrs" {
     error_message = "❌  Количество зон и подсетей не совпадают"
   }
 }
-// ------------------------------------------------------------- variables for ALB and ACM
+
+// для маршрутов в нат
+variable "pub_ubuntu_nat" { type = string }
+
+// для sg в модуле esc

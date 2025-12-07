@@ -4,6 +4,8 @@ module "vpc" {
   vpc_cidr  = "10.0.0.0/16"
   public_subnet_cidrs =  ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"] # для каждой подсети должно быть ссответствие azs
+  
+  pub_ubuntu_nat = module.ec2.pub_ubuntu_nat // 
   vpc_azs = ["sa-east-1a", "sa-east-1b"] # из первого возьмется регион для эндпоинтов ssm
 }
 
@@ -19,9 +21,20 @@ module "ec2" {
 
   private_sg_id = module.vpc.private_sg_id
   public_sg_id = module.vpc.public_sg_id
-
   instance_profile_name = aws_iam_instance_profile.ssm_profile.name # профиль от роли SSM
 }
+
+module "ecs" {
+  source  = "./modules/ecs"
+  vpc_id = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+ 
+  db_user     = "admin"
+  db_password = "Admin12345"
+  db_name     = "mydatabase"      
+
+}
+
 
 # -------------------------------------------------------------------- ключи здесь оставим
 resource "tls_private_key" "ssh_key" { # генерация ключа через встроенного провайдера
