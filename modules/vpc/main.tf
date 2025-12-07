@@ -124,27 +124,27 @@ resource "aws_route" "rt_priv_route" { # нужен отдельно маршр�
   destination_cidr_block = "0.0.0.0/0"
   # instance_id = aws_instance.pub_ubuntu.id  #  NAT/bastion инстанс
   network_interface_id   = var.nat_network_interface_id
-  #network_interface_id = aws_instance.pub_ubuntu.primary_network_interface_id # в новых провайдерах через ENI
-  depends_on           = [var.nat_network_interface_id]                            # дождаться инстанса
+  #n etwork_interface_id = aws_instance.pub_ubuntu.primary_network_interface_id # в новых провайдерах через ENI
+  # depends_on           = [var.nat_network_interface_id]                            # дождаться инстанса
 }
 
 #------------------------------------------------------------------------- настройка  endpoints
 
 /*
-resource "aws_vpc_endpoint" "endpoints" {
-   for_each = {
-    ssm         = "com.amazonaws.${local.region}.ssm"
-    ec2messages = "com.amazonaws.${local.region}.ec2messages"
-    ssmmessages = "com.amazonaws.${local.region}.ssmmessages"
-  }
-  vpc_id              = aws_vpc.main_vpc.id
-  service_name        = each.value
-  vpc_endpoint_type   = "Interface"
-  private_dns_enabled = true
+# resource "aws_vpc_endpoint" "endpoints" {
+#    for_each = {
+#     ssm         = "com.amazonaws.${local.region}.ssm"
+#     ec2messages = "com.amazonaws.${local.region}.ec2messages"
+#     ssmmessages = "com.amazonaws.${local.region}.ssmmessages"
+#   }
+#   vpc_id              = aws_vpc.main_vpc.id
+#   service_name        = each.value
+#   vpc_endpoint_type   = "Interface"
+#   private_dns_enabled = true
 
-  subnet_ids          = aws_subnet.private_subnet[*].id # в каждой подсети эндпоинты
-  security_group_ids  = [aws_security_group.endpoint_sg.id]
-}
+#   subnet_ids          = aws_subnet.private_subnet[*].id # в каждой подсети эндпоинты
+#   security_group_ids  = [aws_security_group.endpoint_sg.id]
+# }
 
 //*/
 
