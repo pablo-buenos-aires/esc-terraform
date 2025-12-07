@@ -7,8 +7,8 @@ output "region_here"     { value = data.aws_region.here.region } # и регио
 output "private_subnet_ids" {  value = module.vpc.private_subnet_ids }
 output "public_ip"    { value = module.ec2.public_ip }
 
-output "asg_name"   { value =  module.ec2.asg_name }
-output "asg_arn"    { value = module.ec2.asg_arn }
+# output "asg_name"   { value =  module.ec2.asg_name }
+# output "asg_arn"    { value = module.ec2.asg_arn }
 
 output "instance_profile_name_ec2" { value = module.ec2.instance_profile_name }
 

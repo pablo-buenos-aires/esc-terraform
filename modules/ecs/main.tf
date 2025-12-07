@@ -163,16 +163,28 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       environment = [
         { name = "DB_HOST",     value = var.db_host },
         { name = "DB_PORT",     value = var.db_port },
-        { name = "DB_USER",     value = var.db_user },
-        { name = "DB_PASSWORD", value = var.db_password },
-        { name = "DB_NAME",     value = var.db_name },
+      ]
+
+      secrets = [
+        {
+          name      = "DB_USER"
+          valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:password::"
+        },
+        {
+          name      = "DB_NAME"
+          valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:dbname::"
+        }
       ]
 
       logConfiguration = {
         logDriver = "awslogs"
         options = {
           awslogs-group         = aws_cloudwatch_log_group.log_group.name
-          awslogs-region        = data.aws_region.current.name
+          awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = "go-backend-"
         }
       }
@@ -207,14 +219,14 @@ resource "aws_secretsmanager_secret" "db_credentials" { # секрет с учё
   name = "db-credentials"
 }
 
-resource "aws_secretsmanager_secret_version" "db_credentials" { # версия секрета с учётными данными БД
-  secret_id     = aws_secretsmanager_secret.db_credentials.id
-  secret_string = jsonencode({
-    username = "db_admin"
-    password = "12345678"
-    dbname   = "userdb"
-  })
-}
+# resource "aws_secretsmanager_secret_version" "db_credentials_version" { # версия секрета с учётными данными БД
+#   secret_id     = aws_secretsmanager_secret.db_credentials.id
+#   secret_string = jsonencode({
+#     username = "db_admin"
+#     password = "12345678"
+#     dbname   = "userdb"
+#   })
+# }
 
 # IAM политика для тасков ECS, чтобы читать секреты из Secrets Manager
 resource "aws_iam_policy" "task_read_db_secret" {
@@ -236,7 +248,7 @@ resource "aws_iam_policy" "task_read_db_secret" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "task_role_read_db_secret" {
-  role       = aws_iam_role.task_role.name
+resource "aws_iam_role_policy_attachment" "task_execution_read_db_secret" {
+  role       = aws_iam_role.task_execution_role.name
   policy_arn = aws_iam_policy.task_read_db_secret.arn
 }

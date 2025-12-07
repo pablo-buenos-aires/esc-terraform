@@ -1,7 +1,7 @@
 
 # ------------------------------------------------------------------------------- /modules
 module "vpc" {
-  source  = "modules/vpc"
+  source  = "./modules/vpc"
   vpc_cidr  = "10.0.0.0/16"
   public_subnet_cidrs =  ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"] # для каждой подсети должно быть ссответствие azs
@@ -13,7 +13,7 @@ module "vpc" {
 }
 
 module "ec2" {
-  source  = "modules/ec2"
+  source  = "./modules/ec2"
   vpc_cidr  = module.vpc.vpc_cidr
   key_name  = aws_key_pair.ssh_aws_key.key_name
   
@@ -28,19 +28,15 @@ module "ec2" {
 }
 
 module "ecs" {
-  source  = "modules/ecs"
+  source  = "./modules/ecs"
   vpc_id = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   public_subnet_ids  = module.vpc.public_subnet_ids
 
- 
-  db_user     = "admin"
-  db_password = "Admin12345"
-  db_name     = "mydatabase"
   
-  db_host = var.db_host
-  db_port = var.db_port
-  db_secret_arn = aws_secretsmanager_secret.db_credentials.arn
+  db_host = "127.0.0.1"
+  db_port = "5432"
+  
   
   ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend"
   image_tag         = "latest"

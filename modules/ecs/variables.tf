@@ -93,25 +93,25 @@ variable "log_group_name" {
 variable "db_host"     { type = string }
 variable "db_port"     { type = string }
 
-variable "db_secret_arn" {
-  type        = string
-  description = "ARN секрета в Secrets Manager с полями username, password и dbname"
-}
+# variable "db_secret_arn" {
+#   type        = string
+#   description = "ARN секрета в Secrets Manager с полями username, password и dbname"
+# }
 
-variable "db_username_secret_key" {
-  type        = string
-  default     = "username"
-  description = "Ключ в SecretString для имени пользователя"
-}
+# variable "db_username_secret_key" {
+#   type        = string
+#   default     = "username"
+#   description = "Ключ в SecretString для имени пользователя"
+# }
 
-variable "db_password_secret_key" {
-  type        = string
-  default     = "password"
-  description = "Ключ в SecretString для пароля"
-}
+# variable "db_password_secret_key" {
+#   type        = string
+#   default     = "password"
+#   description = "Ключ в SecretString для пароля"
+# }
 
-variable "db_name_secret_key" {
-  type        = string
-  default     = "dbname"
-  description = "Ключ в SecretString для имени БД"
-}
+# variable "db_name_secret_key" {
+#   type        = string
+#   default     = "dbname"
+#   description = "Ключ в SecretString для имени БД"
+# }
