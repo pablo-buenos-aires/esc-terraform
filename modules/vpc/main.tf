@@ -125,7 +125,7 @@ resource "aws_route" "rt_priv_route" { # нужен отдельно маршр�
   # instance_id = aws_instance.pub_ubuntu.id  #  NAT/bastion инстанс
   network_interface_id   = var.nat_network_interface_id
   #network_interface_id = aws_instance.pub_ubuntu.primary_network_interface_id # в новых провайдерах через ENI
-  depends_on           = [aws_instance.pub_ubuntu]                            # дождаться инстанса
+  depends_on           = [var.nat_network_interface_id]                            # дождаться инстанса
 }
 
 #------------------------------------------------------------------------- настройка  endpoints

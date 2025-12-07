@@ -25,14 +25,14 @@ output "private_rt_id" { value  = aws_route_table.rt_priv.id }
 output "rt_pub_routes" {  value = aws_route_table.rt_pub.route }  # вывод маршрутов
 output "rt_priv_routes" {  value = aws_route_table.rt_priv.route }
 
-output "ssm_interface_endpoints" { # вывод эндпоинто
-  value = {
-    for k, endp in aws_vpc_endpoint.endpoints: # генератор k -> ключ словаря
-     # значения спискомk => {
-      id           = endp.id
-      service      = endp.service_name
-      # dns_names    = endp.dns_entry[*].dns_name
-      # network_ifcs = endp.network_interface_ids # какие интерфейсы созданы для эндпоинта
-    }
-  }
-}
+# output "ssm_interface_endpoints" { # вывод эндпоинто
+#   value = {
+#     for k, endp in aws_vpc_endpoint.endpoints: # генератор k -> ключ словаря
+#      # значения спискомk => {
+#       id           = endp.id
+#       service      = endp.service_name
+#       # dns_names    = endp.dns_entry[*].dns_name
+#       # network_ifcs = endp.network_interface_ids # какие интерфейсы созданы для эндпоинта
+#     }
+#   }
+# }
