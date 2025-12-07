@@ -201,3 +201,42 @@ resource "aws_ecs_service" "ecs_service" {
   }
   depends_on = [aws_lb_listener.https]
 }
+
+# секрет с учётными данными базы
+resource "aws_secretsmanager_secret" "db_credentials" { # секрет с учётными данными БД
+  name = "db-credentials"
+}
+
+resource "aws_secretsmanager_secret_version" "db_credentials" { # версия секрета с учётными данными БД
+  secret_id     = aws_secretsmanager_secret.db_credentials.id
+  secret_string = jsonencode({
+    username = "db_admin"
+    password = "12345678"
+    dbname   = "userdb"
+  })
+}
+
+# IAM политика для тасков ECS, чтобы читать секреты из Secrets Manager
+resource "aws_iam_policy" "task_read_db_secret" {
+  name        = "ecs-task-read-db-secret"
+  description = "Allow ECS tasks to read DB credentials from Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = aws_secretsmanager_secret.db_credentials.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "task_role_read_db_secret" {
+  role       = aws_iam_role.task_role.name
+  policy_arn = aws_iam_policy.task_read_db_secret.arn
+}

@@ -1,15 +1,4 @@
-resource "aws_secretsmanager_secret" "db_credentials" { # секрет с учётными данными БД
-  name = var.db_secret_arn
-}
 
-resource "aws_secretsmanager_secret_version" "db_credentials" { # версия секрета с учётными данными БД
-  secret_id     = aws_secretsmanager_secret.db_credentials.id
-  secret_string = jsonencode({
-    username = var.db_user
-    password = var.db_password
-    dbname   = var.db_name
-  })
-}
 # ------------------------------------------------------------------------------- /modules
 module "vpc" {
   source  = "modules/vpc"
