@@ -21,5 +21,11 @@ output "public_dns"   { value = module.ec2.public_dns } # DNS
 output "public_instance_id" { value = module.ec2.public_instance_id }
 output "nat_network_interface_id" { value = module.ec2.nat_network_interface_id }
 
+output "private_route_table" {  value = module.vpc.route_table_private}
+
 output "private_routes" {  value = module.vpc.routes_private }
+
+output "alb_dns_name" {
+  value = module.ecs.alb_dns_name
+}
 
