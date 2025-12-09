@@ -6,6 +6,6 @@
 *.tfstate.backup
 .env
 mykeypair
-.pem
-.key
-.pub
+*.pem
+*.key
+*.pub

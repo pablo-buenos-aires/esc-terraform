@@ -5,7 +5,7 @@ output "vpc_cidr" { value = aws_vpc.main_vpc.cidr_block}
 output "igw_id" { value = aws_internet_gateway.igw.id}
 
 # зоны доступности для asg - такие де, как для vpc, проброс входа
-output "vpc_asg_azs" {  value = var.vpc_azs }
+output "vpc_azs" {  value = var.vpc_azs }
 output "region" {  value = local.region }
 
 output "public_sg_id" {   value = aws_security_group.public_sg.id } # SG
@@ -25,14 +25,14 @@ output "route_table_private" { value  = aws_route_table.rt_priv.id }
 output "routes_public" {  value = aws_route_table.rt_pub.route }  # вывод маршрутов, set
 output "routes_private" {  value = aws_route_table.rt_priv.route }
 
-# output "ssm_interface_endpoints" { # вывод эндпоинто
-#   value = {
-#     for k, endp in aws_vpc_endpoint.endpoints: # генератор k -> ключ словаря
-#      # значения спискомk => {
-#       id           = endp.id
-#       service      = endp.service_name
-#       # dns_names    = endp.dns_entry[*].dns_name
-#       # network_ifcs = endp.network_interface_ids # какие интерфейсы созданы для эндпоинта
-#     }
-#   }
-# }
+output "ssm_interface_endpoints" { # вывод эндпоинто
+  value = {
+    for k, endp in aws_vpc_endpoint.endpoints: # генератор k -> ключ словаря
+     # значения спискомk => {
+      id           = endp.id
+      service      = endp.service_name
+      # dns_names    = endp.dns_entry[*].dns_name
+      # network_ifcs = endp.network_interface_ids # какие интерфейсы созданы для эндпоинта
+    }
+  }
+}

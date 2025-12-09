@@ -5,6 +5,7 @@ variable "public_sg_id"      { type = string }
 variable "private_sg_id"  { type = string }
 variable "ami_id"          { type = string }
 
+variable "ami_id"          { type = string }
 variable "instance_type"   {
           type = string
           default = "t3.micro"

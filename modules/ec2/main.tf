@@ -1,4 +1,16 @@
 
+resource "aws_instance" "private_ubuntu" { # создаем инстанс
+  #ami                    = data.aws_ami.ubuntu_24.id
+  ami = var.ami_id
+  instance_type  = var.instance_type
+
+  subnet_id = var.private_subnet_ids[0] # в приватной подсети
+  vpc_security_group_ids = [var.private_sg_id] # группа безопасности
+  key_name   = var.key_name # SSH ключ
+  # associate_public_ip_address = true # выделение внешнего IP
+  # source_dest_check = false #n чтобы работал NAT
+  iam_instance_profile = var.instance_profile_name
+}
 
 resource "aws_instance" "pub_ubuntu" { # создаем инстанс
   #ami                    = data.aws_ami.ubuntu_24.id

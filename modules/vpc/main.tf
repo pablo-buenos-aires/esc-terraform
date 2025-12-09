@@ -130,23 +130,23 @@ resource "aws_route_table_association" "rt_pub_ass" { # Привязка таб�
 
 #------------------------------------------------------------------------- настройка  endpoints
 
-/*
-# resource "aws_vpc_endpoint" "endpoints" {
-#    for_each = {
-#     ssm         = "com.amazonaws.${local.region}.ssm"
-#     ec2messages = "com.amazonaws.${local.region}.ec2messages"
-#     ssmmessages = "com.amazonaws.${local.region}.ssmmessages"
-#   }
-#   vpc_id              = aws_vpc.main_vpc.id
-#   service_name        = each.value
-#   vpc_endpoint_type   = "Interface"
-#   private_dns_enabled = true
 
-#   subnet_ids          = aws_subnet.private_subnet[*].id # в каждой подсети эндпоинты
-#   security_group_ids  = [aws_security_group.endpoint_sg.id]
-# }
+resource "aws_vpc_endpoint" "endpoints" {
+   for_each = {
+    ssm         = "com.amazonaws.${local.region}.ssm"
+    ec2messages = "com.amazonaws.${local.region}.ec2messages"
+    ssmmessages = "com.amazonaws.${local.region}.ssmmessages"
+  }
+  vpc_id              = aws_vpc.main_vpc.id
+  service_name        = each.value
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
 
-//*/
+  subnet_ids          = aws_subnet.private_subnet[*].id # в каждой подсети эндпоинты
+  security_group_ids  = [aws_security_group.endpoint_sg.id]
+}
+
+
 
 
 

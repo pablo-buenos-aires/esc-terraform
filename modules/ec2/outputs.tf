@@ -8,6 +8,8 @@
 
 output "instance_profile_name" { value = var.instance_profile_name }
 
+output "private_instance_id"  { value = aws_instance.private_instance_id.id } # id инстанса
+
 output "public_instance_id"  { value = aws_instance.pub_ubuntu.id } # id инстанса
 
 output "public_ip"    { value = aws_instance.pub_ubuntu.public_ip }
