@@ -28,7 +28,7 @@ output "routes_private" {  value = aws_route_table.rt_priv.route }
 output "ssm_interface_endpoints" { # вывод эндпоинто
   value = {
     for k, endp in aws_vpc_endpoint.endpoints: # генератор k -> ключ словаря
-     # значения спискомk => {
+     k => {
       id           = endp.id
       service      = endp.service_name
       # dns_names    = endp.dns_entry[*].dns_name

@@ -166,15 +166,15 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       secrets = [
         {
           name      = "DB_USER"
-          valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:username::"
+          valueFrom = "${data.aws_secretsmanager_secret.db_credentials.arn}:username::"
         },
         {
           name      = "DB_PASSWORD"
-          valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:password::"
+          valueFrom = "${data.aws_secretsmanager_secret.db_credentials.arn}:password::"
         },
         {
           name      = "DB_NAME"
-          valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:dbname::"
+          valueFrom = "${data.aws_secretsmanager_secret.db_credentials.arn}:dbname::"
         }
       ]
 
@@ -213,9 +213,12 @@ resource "aws_ecs_service" "ecs_service" {
 }
 
 # секрет с учётными данными базы
-resource "aws_secretsmanager_secret" "db_credentials" { # секрет с учётными данными БД
-  name = "db-credentials"
+data "aws_secretsmanager_secret" "db_credentials" {
+  name = "db_credentials"  # точное имя как в консоли
 }
+# resource "aws_secretsmanager_secret" "db_credentials" { # секрет с учётными данными БД
+#   name = "db_credentials"
+# }
 
 # resource "aws_secretsmanager_secret_version" "db_credentials_version" { # версия секрета с учётными данными БД
 #   secret_id     = aws_secretsmanager_secret.db_credentials.id
@@ -240,7 +243,7 @@ resource "aws_iam_policy" "task_read_db_secret" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ]
-        Resource = aws_secretsmanager_secret.db_credentials.arn
+        Resource = data.aws_secretsmanager_secret.db_credentials.arn
       }
     ]
   })
