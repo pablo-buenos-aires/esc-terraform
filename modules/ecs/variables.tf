@@ -1,7 +1,5 @@
-variable "acm_certificate_arn" {
-  type        = string
-  description = "ARN сертификата ACM для api-домена"
-}
+# 
+
 variable "ecr_repository_url" {
   type        = string
   description = "ECR repo URL (без тега), типа 8369....dkr.ecr.sa-east-1.amazonaws.com/go-backend"

@@ -19,11 +19,11 @@ output "private_rt_ass_ids" {  value = aws_route_table_association.rt_priv_ass[*
 
 
 # таблицы и маршруты
-output "public_rt_id" { value  = aws_route_table.rt_pub.id }
-output "private_rt_id" { value  = aws_route_table.rt_priv.id }
+output "route_table_public" { value  = aws_route_table.rt_pub.id }
+output "route_table_private" { value  = aws_route_table.rt_priv.id }
 # вывод  маршрутов
-output "rt_pub_routes" {  value = aws_route_table.rt_pub.route }  # вывод маршрутов
-output "rt_priv_routes" {  value = aws_route_table.rt_priv.route }
+output "routes_public" {  value = aws_route_table.rt_pub.route }  # вывод маршрутов, set
+output "routes_private" {  value = aws_route_table.rt_priv.route }
 
 # output "ssm_interface_endpoints" { # вывод эндпоинто
 #   value = {

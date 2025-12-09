@@ -119,14 +119,14 @@ resource "aws_route_table_association" "rt_pub_ass" { # Привязка таб�
 
 # -вкключим маршрут гна НАТ, доступ по SSM теперь
 
-resource "aws_route" "rt_priv_route" { # нужен отдельно маршрут, инлайн нельзя для instance_id
-  route_table_id         = aws_route_table.rt_priv.id
-  destination_cidr_block = "0.0.0.0/0"
-  # instance_id = aws_instance.pub_ubuntu.id  #  NAT/bastion инстанс
-  network_interface_id   = var.nat_network_interface_id
-  #n etwork_interface_id = aws_instance.pub_ubuntu.primary_network_interface_id # в новых провайдерах через ENI
-  # depends_on           = [var.nat_network_interface_id]                            # дождаться инстанса
-}
+# resource "aws_route" "rt_priv_route" { # нужен отдельно маршрут, инлайн нельзя для instance_id
+#   route_table_id         = aws_route_table.rt_priv.id
+#   destination_cidr_block = "0.0.0.0/0"
+#   # instance_id = aws_instance.pub_ubuntu.id  #  NAT/bastion инстанс
+#   network_interface_id   = var.nat_network_interface_id
+#   #n etwork_interface_id = aws_instance.pub_ubuntu.primary_network_interface_id # в новых провайдерах через ENI
+#   # depends_on           = [var.nat_network_interface_id]                            # дождаться инстанса
+# }
 
 #------------------------------------------------------------------------- настройка  endpoints
 

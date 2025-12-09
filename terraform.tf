@@ -12,5 +12,8 @@ variable "region" {
     default     = "sa-east-1"
 }
 
-provider "aws" { region = var.region }
+provider "aws" { 
+	region = var.region 	
+	profile = var.iam_user # профиль из aws credentials
+	}
 

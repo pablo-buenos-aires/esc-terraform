@@ -7,7 +7,7 @@ module "vpc" {
   private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"] # для каждой подсети должно быть ссответствие azs
   
   //pub_ubuntu_nat = module.ec2.pub_ubuntu_nat // 
-  nat_network_interface_id = module.ec2.nat_network_interface_id
+  //nat_network_interface_id = module.ec2.nat_network_interface_id
 
   vpc_azs = ["sa-east-1a", "sa-east-1b"] # из первого возьмется регион для эндпоинтов ssm
 }
@@ -17,7 +17,7 @@ module "ec2" {
   vpc_cidr  = module.vpc.vpc_cidr
   key_name  = aws_key_pair.ssh_aws_key.key_name
   
-  ami_id =  data.aws_ami.ubuntu24_nat // об раз с  net-persistant
+  ami_id =  data.aws_ami.ubuntu24_nat.id // образ с  net-persistant
   // проброс подсетей и групп безопасности
   public_subnet_ids = module.vpc.public_subnet_ids
   private_subnet_ids = module.vpc.private_subnet_ids
@@ -40,7 +40,14 @@ module "ecs" {
   
   ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend"
   image_tag         = "latest"
-  acm_certificate_arn = "arn:aws:acm:sa-east-1:836940249137:certificate/your-certificate-id"
+  # acm_certificate_arn = "arn:aws:acm:sa-east-1:836940249137:certificate/your-certificate-id"
+}
+
+# --------------------------------------------------------------------- маршрут в нат
+resource "aws_route" "private_nat_route" {
+  route_table_id         = module.vpc.route_table_private         # Берем из output VPC
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id   = module.ec2.nat_network_interface_id # Берем из output EC2
 }
 
 

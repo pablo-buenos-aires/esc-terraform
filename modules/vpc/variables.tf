@@ -32,8 +32,8 @@ variable "private_subnet_cidrs" {
   }
 }
 
-// для маршрутов в нат
-variable "nat_network_interface_id" {
-  type        = string
-  description = "ENI id NAT"
-}
+# // для маршрутов в нат
+# variable "nat_network_interface_id" {
+#   type        = string
+#   description = "ENI id NAT"
+# }
