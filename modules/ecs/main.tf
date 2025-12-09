@@ -72,29 +72,25 @@ resource "aws_lb_listener" "http" {
   port              = 80
   protocol          = "HTTP"
 
-  default_action { # на алб ходятт только по реез
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-}
-
-# Основной HTTPS listener
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.alb.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.acm_certificate_arn # передашь из ACM
-
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.alb_tg.arn
   }
 }
+
+# # Основной HTTPS listener
+# resource "aws_lb_listener" "https" {
+#   load_balancer_arn = aws_lb.alb.arn
+#   port              = 443
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   certificate_arn   = var.acm_certificate_arn # передашь из ACM
+
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.alb_tg.arn
+#   }
+# }
 
 data "aws_iam_policy_document" "ecs_task_assume_role" {
   statement {
@@ -143,7 +139,8 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.task_cpu
   memory                   = var.task_memory
-
+ # executionRoleArn: "arn:aws:iam::836940249137:role/ecsTaskExecutionRole",
+ # taskRoleArn: "arn:aws:iam::836940249137:role/ecsAppTaskRole",
   execution_role_arn = aws_iam_role.task_execution_role.arn
   task_role_arn      = aws_iam_role.task_role.arn
 
@@ -151,11 +148,12 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
     {
       name      = var.container_name
       image     = "${var.ecr_repository_url}:${var.image_tag}"
-      essential = true
+      essential = true # контейнер упал, падает вся задача 
 
       portMappings = [
         {
-          containerPort = var.service_port
+          containerPort = var.service_port # порт внутри контейнера
+          hostPort      = var.service_port # порт на котором контейнер доступен в таске
           protocol      = "tcp"
         }
       ]
@@ -211,7 +209,7 @@ resource "aws_ecs_service" "ecs_service" {
     container_name   = var.container_name
     container_port   = var.service_port
   }
-  depends_on = [aws_lb_listener.https]
+  depends_on = [aws_lb_listener.http]
 }
 
 # секрет с учётными данными базы

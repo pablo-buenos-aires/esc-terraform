@@ -8,10 +8,10 @@ output "alb_dns_name" {
   value       = aws_lb.alb.dns_name
 }
 
-output "alb_listener_https_arn" {
-  description = "ARN of the HTTPS listener"
-  value       = aws_lb_listener.https.arn
-}
+# output "alb_listener_https_arn" {
+#   description = "ARN of the HTTPS listener"
+#   value       = aws_lb_listener.https.arn
+# }
 
 output "target_group_arn" {
   description = "ARN of the target group for the service"
