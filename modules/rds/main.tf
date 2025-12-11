@@ -28,7 +28,8 @@ resource "aws_db_instance" "db_instance" {
   password = local.db_creds.password
 
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
-  vpc_security_group_ids = [var.ecs_sg_id] # разрешаем доступ из ECS задач
+  # Привязываем отдельную SG для БД, которая пропускает трафик только от ECS задач
+  vpc_security_group_ids = [var.rds_sg_id] # разрешаем доступ из ECS задач
 
   # Приватный инстанс
   publicly_accessible = false
