@@ -6,26 +6,6 @@ locals {
   db_creds = jsondecode(data.aws_secretsmanager_secret_version.db_credentials.secret_string)
 }
 
-resource "aws_security_group" "rds_sg" {
-  name        = "rds-sg"
-  vpc_id      = var.vpc_id
-
-  # Вход с ECS SG, порт 5432
-  ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [var.ecs_sg_id]
-  }
-
-  # Выход: весь трафик наружу (для обновлений, бэкапов и т.п. через NAT)
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
 
 # Subnet group для RDS
 resource "aws_db_subnet_group" "db_subnet_group" {
@@ -37,7 +17,7 @@ resource "aws_db_instance" "db_instance" {
   identifier = var.db_identifier
 
   engine         = "postgres"
-  engine_version = var.engine_version
+ // engine_version = var.engine_version
 
   instance_class    = var.instance_class
   allocated_storage = var.allocated_storage
@@ -48,7 +28,7 @@ resource "aws_db_instance" "db_instance" {
   password = local.db_creds.password
 
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+  vpc_security_group_ids = [var.ecs_sg_id] # разрешаем доступ из ECS задач
 
   # Приватный инстанс
   publicly_accessible = false
@@ -61,7 +41,7 @@ resource "aws_db_instance" "db_instance" {
   multi_az = var.multi_az
 
   # Авто minor updates
-  auto_minor_version_upgrade = true
+  auto_minor_version_upgrade = true // c false - error
 
   deletion_protection = false
 

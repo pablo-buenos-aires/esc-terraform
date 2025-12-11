@@ -1,51 +1,12 @@
-resource "aws_security_group" "alb_sg" { # для ALB
-   vpc_id       = module.vpc.vpc_id
-   ingress { 
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  #  ingress {
-  #   from_port   = 443
-  #   to_port     = 443
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  # }
 
-  egress { #  ходить куда угодно 
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "ecs_sg" { # для ECS tasks
-  vpc_id            = module.vpc.vpc_id
-  # Пускаем трафик на 8080 только от ALB
-  ingress {
-    from_port       = var.service_port
-    to_port         = var.service_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb_sg.id]
-  }
-  # Таски могут ходить наружу (через NAT) и к другим сервисам
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-}
 # ------------------------------------------------------------------------------- /modules
 module "vpc" {
   source               = "./modules/vpc"
   vpc_cidr             = "10.0.0.0/16"
   public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"] # для каждой подсети должно быть ссответствие azs
-
+  service_port = 8080 // для sg_alb
+  
   //pub_ubuntu_nat = module.ec2.pub_ubuntu_nat // 
   //nat_network_interface_id = module.ec2.nat_network_interface_id
 
@@ -73,15 +34,15 @@ module "ecs" {
   private_subnet_ids = module.vpc.private_subnet_ids
   public_subnet_ids  = module.vpc.public_subnet_ids
    
-  ecs_sg_id = aws_security_group.ecs_sg.id
-  alb_sg_id = aws_security_group.alb_sg.id
+  ecs_sg_id = module.vpc.ecs_sg_id
+  alb_sg_id = module.vpc.alb_sg_id
 
   db_host = module.rds.rds_endpoint
   db_port = module.rds.rds_port
-  
-  service_port = var.service_port
+ 
+  service_port = module.vpc.service_port // для sg_ecs
   # зашито desired_count 1, имена кластера, службы, алб, логи зашиты в variables.tf
-  
+   
     
 
   ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend"
@@ -94,7 +55,8 @@ module "rds" {
   vpc_id             = module.vpc.vpc_id
   
   private_subnet_ids = module.vpc.private_subnet_ids
-  ecs_sg_id = aws_security_group.ecs_sg.id
+  ecs_sg_id = module.vpc.ecs_sg_id
+  rds_sg_id = module.vpc.rds_sg_id
 
   db_credentials = "db_credentials" # имя секрета в Secrets Manager
  

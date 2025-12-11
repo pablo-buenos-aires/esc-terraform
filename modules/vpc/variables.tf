@@ -32,6 +32,12 @@ variable "private_subnet_cidrs" {
   }
 }
 
+variable "service_port" {
+  description = "Порт, на котором бэк принимает трафик"
+  type        = number
+  default     = 8080
+}
+
 # // для маршрутов в нат
 # variable "nat_network_interface_id" {
 #   type        = string

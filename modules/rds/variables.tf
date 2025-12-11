@@ -1,3 +1,14 @@
+variable "rds_sg_id" {
+  description = "Security Group RDS, которой разрешим доступ от ECS задач"
+  type        = string
+}
+
+variable "ecs_sg_id" {
+  description = "Security Group ECS задач, которой разрешим доступ к RDS"
+  type        = string
+}
+
+
 variable "vpc_id" {
   description = "ID VPC, где живут приватные подсети"
   type        = string
@@ -8,10 +19,6 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
-variable "ecs_sg_id" {
-  description = "Security Group ECS задач, которой разрешим доступ к RDS"
-  type        = string
-}
 
 variable "db_credentials" {
   description = "Имя секрета в Secrets Manager с JSON {username,password,dbname}"
@@ -33,7 +40,7 @@ variable "instance_class" {
 variable "allocated_storage" {
   description = "Размер диска в ГБ"
   type        = number
-  default     = 1
+  default     = 20
 }
 
 variable "engine_version" {

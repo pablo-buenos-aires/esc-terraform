@@ -35,6 +35,69 @@ resource "aws_subnet" "private_subnet" {
 resource "aws_internet_gateway" "igw" { vpc_id = aws_vpc.main_vpc.id } # IGW для доступа VPC в интернет
 
 # -------------------------------------------------------------------------------------------  bastion/nat SG
+resource "aws_security_group" "alb_sg" { # для ALB
+   vpc_id       = aws_vpc.main_vpc.id
+   ingress { 
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  #  ingress {
+  #   from_port   = 443
+  #   to_port     = 443
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
+
+  egress { #  ходить куда угодно 
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "ecs_sg" { # для ECS tasks
+  vpc_id            = aws_vpc.main_vpc.id
+  # Пускаем трафик на 8080 только от ALB
+  ingress {
+    from_port       = var.service_port
+    to_port         = var.service_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+  # Таски могут ходить наружу (через NAT) и к другим сервисам
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+}
+resource "aws_security_group" "rds_sg" {
+  name        = "rds-sg"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  # Вход с ECS SG, порт 5432
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_sg.id]
+  }
+
+  # Выход: весь трафик наружу (для обновлений, бэкапов и т.п. через NAT)
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
 resource "aws_security_group" "public_sg" { # разрешаем входящий трафик по SSH и любой из приватной подсети, для NAT
   vpc_id = aws_vpc.main_vpc.id
   ingress {

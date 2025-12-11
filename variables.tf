@@ -8,8 +8,3 @@ variable "iam_user" {
   default     = "pablo"
 }
 
-variable "service_port" {
-  description = "Порт, на котором сервис принимает трафик"
-  type        = number
-  default     = 8080
-}

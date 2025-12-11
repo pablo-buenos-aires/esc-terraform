@@ -11,6 +11,12 @@ output "region" {  value = local.region }
 output "public_sg_id" {   value = aws_security_group.public_sg.id } # SG
 output "private_sg_id" {   value = aws_security_group.private_sg.id }
 output "endpoint_sg_id" {   value = aws_security_group.endpoint_sg.id }
+ 
+output "ecs_sg_id" {   value = aws_security_group.ecs_sg.id }
+output "alb_sg_id" {   value = aws_security_group.alb_sg.id }
+output "rds_sg_id" {   value = aws_security_group.rds_sg.id }
+
+output "service_port" {   value = var.service_port }
 
 # подсети
 output "public_subnet_ids" { value  = aws_subnet.public_subnet[*].id }

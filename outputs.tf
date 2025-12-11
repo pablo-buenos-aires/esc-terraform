@@ -25,10 +25,17 @@ output "private_route_table" {  value = module.vpc.route_table_private}
 
 output "private_routes" {  value = module.vpc.routes_private }
 
-output "alb_dns_name" {
-  value = module.ecs.alb_dns_name
-}
-output "db_internal_endpoint" {
-  value = module.rds.rds_endpoint
+output "alb_dns_name" { value = module.ecs.alb_dns_name }
+output "db_endpoint" {   value = module.rds.rds_endpoint }
+
+output "ecs_task_execution_role_arn" {
+  value       = module.ecs.ecs_task_execution_role_arn
+  description = "ARN of ECS task execution role"
 }
 
+output "ecs_app_task_role_arn" {
+  value       = module.ecs.ecs_task_role_arn
+  description = "ARN of ECS application task role"
+}
+
+output "service_port" { value = module.vpc.service_port }

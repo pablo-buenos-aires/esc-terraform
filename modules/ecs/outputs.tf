@@ -28,3 +28,12 @@ output "ecs_cluster_name" {
   value       = aws_ecs_cluster.ecs_cluster.name
 }
 
+output "ecs_task_execution_role_arn" {
+  value       = aws_iam_role.task_execution_role.arn
+  description = "ARN of ECS task execution role"
+}
+
+output "ecs_task_role_arn" {
+  value       = aws_iam_role.task_role.arn
+  description = "ARN of ECS application task role"
+}

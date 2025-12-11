@@ -1,3 +1,8 @@
+variable "service_port" {
+  type        = number
+  description = "Порт, на котором работает контейнер и target group"
+}
+
 # БД и другие настройки как env-переменные
 variable "db_host" { type = string }
 variable "db_port" { type = string }
@@ -7,6 +12,7 @@ variable "ecs_sg_id" { type = string }
 variable "alb_sg_id" { type = string }
 
 variable "ecr_repository_url" {  type  = string}
+
 variable "image_tag" {
   type    = string
   default = "latest"
@@ -44,12 +50,6 @@ variable "ecs_service_name" {
   type        = string
   default     = "ecs-service"
   description = "Имя сервиса ECS"
-}
-
-variable "service_port" {
-  type        = number
-
-  description = "Порт, на котором работает контейнер и target group"
 }
 
 variable "task_cpu" {

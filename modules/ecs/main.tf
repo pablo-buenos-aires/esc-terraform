@@ -59,21 +59,43 @@ data "aws_iam_policy_document" "ecs_task_assume_role" {
     }
   }
 }
+# ------------------------------- IAM роли для ECS tasks
+# Роль приложения (taskRoleArn)
+resource "aws_iam_role" "task_role" {
+  name               = "ecsAppTaskRole"  # <-- важно: совпадает с ARN в task definition
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
+}
 
+# Execution role (executionRoleArn), от этой роли действует агент ECS 
 resource "aws_iam_role" "task_execution_role" {
+  name               = "ecsTaskExecutionRole"  # <-- совпадает с task definition
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "task_execution_policy" {
-  role       = aws_iam_role.task_execution_role.name // -name
- # эта политика позволяет таскам скачивать образы из ECR и отправлять логи в CloudWatch и др
+  role       = aws_iam_role.task_execution_role.name
+  # Политика позволяет таскам качать образы из ECR, писать логи в CloudWatch и т.п.
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_iam_role" "task_role" {
-  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
-}
 
+# Здесь повесить политики для приложения, если нужны права на S3 для бэка
+# Пример:
+# resource "aws_iam_role_policy" "task_app_policy" {
+#   name = "ecsAppTaskInlinePolicy"
+#   role = aws_iam_role.task_role.id
+#
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow"
+#         Action = ["secretsmanager:GetSecretValue"]
+#         Resource = "arn:aws:secretsmanager:sa-east-1:836940249137:secret:db-credentials-*"
+#       }
+#     ]
+#   })
+# }
 
 //------------------------------- cluster, task definition и service  для ECS Fargate
 resource "aws_ecs_cluster" "ecs_cluster" {
@@ -91,68 +113,69 @@ resource "aws_cloudwatch_log_group" "log_group" {
   retention_in_days = 14
 }
 
-resource "aws_ecs_task_definition" "ecs_task_definition" {
-   family                   = var.task_family
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = var.task_cpu
-  memory                   = var.task_memory
- # executionRoleArn: "arn:aws:iam::836940249137:role/ecsTaskExecutionRole",
- # taskRoleArn: "arn:aws:iam::836940249137:role/ecsAppTaskRole",
-  execution_role_arn = aws_iam_role.task_execution_role.arn
-  task_role_arn      = aws_iam_role.task_role.arn
+# resource "aws_ecs_task_definition" "ecs_task_definition" {
+#    family                   = var.task_family
+#   network_mode             = "awsvpc"
+#   requires_compatibilities = ["FARGATE"]
+#   cpu                      = var.task_cpu
+#   memory                   = var.task_memory
+#  # executionRoleArn: "arn:aws:iam::836940249137:role/ecsTaskExecutionRole",
+#  # taskRoleArn: "arn:aws:iam::836940249137:role/ecsAppTaskRole",
+#   execution_role_arn = aws_iam_role.task_execution_role.arn
+#   task_role_arn      = aws_iam_role.task_role.arn
 
-  container_definitions = jsonencode([
-    {
-      name      = var.container_name
-      image     = "${var.ecr_repository_url}:${var.image_tag}"
-      essential = true # контейнер упал, падает вся задача 
+#   container_definitions = jsonencode([
+#     {
+#       name      = var.container_name
+#       image     = "${var.ecr_repository_url}:${var.image_tag}"
+#       essential = true # контейнер упал, падает вся задача 
 
-      portMappings = [
-        {
-          containerPort = var.service_port # порт внутри контейнера
-          hostPort      = var.service_port # порт на котором контейнер доступен в таске
-          protocol      = "tcp"
-        }
-      ]
+#       portMappings = [
+#         {
+#           containerPort = var.service_port # порт внутри контейнера
+#           hostPort      = var.service_port # порт на котором контейнер доступен в таске
+#           protocol      = "tcp"
+#         }
+#       ]
 
-      environment = [
-        { name = "DB_HOST",     value = var.db_host },
-        { name = "DB_PORT",     value = var.db_port },
-      ]
+#       environment = [
+#         { name = "DB_HOST",     value = var.db_host },
+#         { name = "DB_PORT",     value = var.db_port },
+#       ]
 
-      secrets = [
-        {
-          name      = "DB_USER"
-          valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:username::"
-        },
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:password::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:dbname::"
-        }
-      ]
+#       secrets = [
+#         {
+#           name      = "DB_USER"
+#           valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:username::"
+#         },
+#         {
+#           name      = "DB_PASSWORD"
+#           valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:password::"
+#         },
+#         {
+#           name      = "DB_NAME"
+#           valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:dbname::"
+#         }
+#       ]
 
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.log_group.name
-          awslogs-region        = data.aws_region.current.region
-          awslogs-stream-prefix = "go-backend-"
-        }
-      }
-    }
-  ])
-}
+#       logConfiguration = {
+#         logDriver = "awslogs"
+#         options = {
+#           awslogs-group         = aws_cloudwatch_log_group.log_group.name
+#           awslogs-region        = data.aws_region.current.region
+#           awslogs-stream-prefix = "go-backend-"
+#         }
+#       }
+#     }
+#   ])
+# }
 
 
 resource "aws_ecs_service" "ecs_service" {
   name            = var.ecs_service_name
   cluster         = aws_ecs_cluster.ecs_cluster.id
-  task_definition = aws_ecs_task_definition.ecs_task_definition.arn
+  task_definition = "backend-task"
+  // aws_ecs_task_definition.ecs_task_definition.arn
   launch_type     = "FARGATE"
   desired_count   = var.desired_count
 
@@ -168,6 +191,10 @@ resource "aws_ecs_service" "ecs_service" {
     container_port   = var.service_port
   }
   depends_on = [aws_lb_listener.http]
+ 
+  lifecycle {
+  ignore_changes = [task_definition]
+  }
 }
 
 # секрет с учётными данными базы
