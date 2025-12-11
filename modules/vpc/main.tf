@@ -9,11 +9,12 @@ locals {
 
 # основная VPC
 resource "aws_vpc" "main_vpc" {
+ 
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
-
+ 
 # подсети
 resource "aws_subnet" "public_subnet" {
   count             = length(var.public_subnet_cidrs)
@@ -56,6 +57,7 @@ resource "aws_security_group" "alb_sg" { # для ALB
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  tags = {Name = "alb-sg"}
 }
 
 resource "aws_security_group" "ecs_sg" { # для ECS tasks
@@ -74,10 +76,9 @@ resource "aws_security_group" "ecs_sg" { # для ECS tasks
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+    tags = {Name = "ecs-sg"}
 }
 resource "aws_security_group" "rds_sg" {
-  name        = "rds-sg"
   vpc_id      = aws_vpc.main_vpc.id
 
   # Вход с ECS SG, порт 5432
@@ -95,6 +96,7 @@ resource "aws_security_group" "rds_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+    tags = {Name = "rds-sg"}
 }
 
 
@@ -120,6 +122,7 @@ resource "aws_security_group" "public_sg" { # разрешаем входящи�
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+   tags = {Name = "public_sg"}
 }
 # ------------------------------------------------------------------------------------------- SG приватный инстанс
 resource "aws_security_group" "private_sg" {
@@ -136,6 +139,7 @@ resource "aws_security_group" "private_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+    tags = {Name = "private_sg"}
 }
 # ------------------------------------------------------------------------------------------- SG endpoints
 resource "aws_security_group" "endpoint_sg" { # для SSM endpoints
@@ -153,6 +157,7 @@ resource "aws_security_group" "endpoint_sg" { # для SSM endpoints
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  tags = {Name = "endpoint_sg"}
 }
 
 
