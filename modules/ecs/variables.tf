@@ -1,28 +1,12 @@
-# 
 
-variable "ecr_repository_url" {
-  type        = string
-  description = "ECR repo URL (без тега), типа 8369....dkr.ecr.sa-east-1.amazonaws.com/go-backend"
-}
-
+variable "ecr_repository_url" {  type  = string}
 variable "image_tag" {
-  type        = string
-  default     = "latest"
-  description = "Docker image tag, типа v15 или latest"
+  type    = string
+  default = "latest"
 }
-
-
-variable "vpc_id"     { type = string }
-
-variable "public_subnet_ids" {
-  type        = list(string)
-  description = "Публичные подсети для ALB"
-}
-
-variable "private_subnet_ids" {
-  type        = list(string)
-  description = "Приватные подсети для ECS"
-}
+variable "vpc_id" { type = string }
+variable "public_subnet_ids" {  type  = list(string)}
+variable "private_subnet_ids" { type = list(string) }
 #------------------------------------------------------------ дополнительные параметры
 variable "alb_name" {
   type        = string
@@ -88,28 +72,5 @@ variable "log_group_name" {
 # Секрет с учётными данными базы
 
 # БД и другие настройки как env-переменные
-variable "db_host"     { type = string }
-variable "db_port"     { type = string }
-
-# variable "db_secret_arn" {
-#   type        = string
-#   description = "ARN секрета в Secrets Manager с полями username, password и dbname"
-# }
-
-# variable "db_username_secret_key" {
-#   type        = string
-#   default     = "username"
-#   description = "Ключ в SecretString для имени пользователя"
-# }
-
-# variable "db_password_secret_key" {
-#   type        = string
-#   default     = "password"
-#   description = "Ключ в SecretString для пароля"
-# }
-
-# variable "db_name_secret_key" {
-#   type        = string
-#   default     = "dbname"
-#   description = "Ключ в SecretString для имени БД"
-# }
+variable "db_host" { type = string }
+variable "db_port" { type = string }

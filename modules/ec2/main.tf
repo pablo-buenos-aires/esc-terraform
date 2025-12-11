@@ -27,7 +27,10 @@ resource "aws_instance" "pub_ubuntu" { # создаем инстанс
 
   # user_data = file("${path.module}/user_data_public.sh")
   # в образе уже установили софт
-  user_data =  <<EOF
+  user_data =  <<-EOF
+#!/bin/bash -xe
+exec > /var/log/user-data.log 2>&1
+
 # Включаем форвардинг и делаем это постоянным
 sysctl -w net.ipv4.ip_forward=1
 echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-nat.conf #  reboot-safe

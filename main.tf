@@ -1,11 +1,11 @@
 
 # ------------------------------------------------------------------------------- /modules
 module "vpc" {
-  source  = "./modules/vpc"
-  vpc_cidr  = "10.0.0.0/16"
-  public_subnet_cidrs =  ["10.0.1.0/24", "10.0.2.0/24"]
+  source               = "./modules/vpc"
+  vpc_cidr             = "10.0.0.0/16"
+  public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"] # для каждой подсети должно быть ссответствие azs
-  
+
   //pub_ubuntu_nat = module.ec2.pub_ubuntu_nat // 
   //nat_network_interface_id = module.ec2.nat_network_interface_id
 
@@ -13,39 +13,50 @@ module "vpc" {
 }
 
 module "ec2" {
-  source  = "./modules/ec2"
-  vpc_cidr  = module.vpc.vpc_cidr
-  key_name  = aws_key_pair.ssh_aws_key.key_name
-  
-  ami_id =  data.aws_ami.ubuntu24_nat.id // образ с  net-persistant
+  source   = "./modules/ec2"
+  vpc_cidr = module.vpc.vpc_cidr
+  key_name = aws_key_pair.ssh_aws_key.key_name
+
+  ami_id = data.aws_ami.ubuntu24_nat.id // образ с  net-persistant
   // проброс подсетей и групп безопасности
-  public_subnet_ids = module.vpc.public_subnet_ids
+  public_subnet_ids  = module.vpc.public_subnet_ids
   private_subnet_ids = module.vpc.private_subnet_ids
 
-  private_sg_id = module.vpc.private_sg_id
-  public_sg_id = module.vpc.public_sg_id
+  private_sg_id         = module.vpc.private_sg_id
+  public_sg_id          = module.vpc.public_sg_id
   instance_profile_name = aws_iam_instance_profile.ssm_profile.name # профиль от роли SSM
 }
 
 module "ecs" {
-  source  = "./modules/ecs"
-  vpc_id = module.vpc.vpc_id
+  source             = "./modules/ecs"
+  vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   public_subnet_ids  = module.vpc.public_subnet_ids
 
-  
-  db_host = "127.0.0.1"
-  db_port = "5432"
-  
-  
+
+  db_host = module.rds.db_host
+  db_port = module.rds.db_port
+  # зашито desired_count 1, имена кластера, службы, алб, логи зашиты в variables.tf
+
   ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend"
-  image_tag         = "latest"
+  image_tag          = "latest"
   # acm_certificate_arn = "arn:aws:acm:sa-east-1:836940249137:certificate/your-certificate-id"
+}
+
+module "rds" {
+  source             = "./modules/rds"
+  vpc_id             = module.vpc.vpc_id
+  
+  private_subnet_ids = module.vpc.private_subnet_ids
+  ecs_sg_id = module.ecs.ecs_sg_id
+
+  db_credentials = "db_credentials" # имя секрета в Secrets Manager
+  
 }
 
 # --------------------------------------------------------------------- маршрут в нат
 resource "aws_route" "private_nat_route" {
-  route_table_id         = module.vpc.route_table_private         # Берем из output VPC
+  route_table_id         = module.vpc.route_table_private # Берем из output VPC
   destination_cidr_block = "0.0.0.0/0"
   network_interface_id   = module.ec2.nat_network_interface_id # Берем из output EC2
 }
@@ -53,13 +64,13 @@ resource "aws_route" "private_nat_route" {
 
 # -------------------------------------------------------------------- ключи здесь оставим
 resource "tls_private_key" "ssh_key" { # генерация ключа через встроенного провайдера
-	algorithm = "RSA" 
-	rsa_bits  = 2048 
-	}
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
 
-resource "aws_key_pair" "ssh_aws_key" {  # регистрируем ключ
-  	public_key = tls_private_key.ssh_key.public_key_openssh # ключ в формате Openssh
-    key_name   = "tf-ssh-key" # без этого не связывает ключи корректно
+resource "aws_key_pair" "ssh_aws_key" {                   # регистрируем ключ
+  public_key = tls_private_key.ssh_key.public_key_openssh # ключ в формате Openssh
+  key_name   = "tf-ssh-key"                               # без этого не связывает ключи корректно
 
 }
 
@@ -94,11 +105,11 @@ resource "local_file" "file_ssh_pub" {
 #--------------------------------------------------------------------------- настройка SSM для инстансов
 resource "aws_iam_role" "ssm_role" { # роль создаем
   name = "ssm_role_name"
-  assume_role_policy = jsonencode({  # для получения JSON для амазон
-    Version = "2012-10-17" # обязательное поле
-    Statement = [{  #  список правил
+  assume_role_policy = jsonencode({ # для получения JSON для амазон
+    Version = "2012-10-17"          # обязательное поле
+    Statement = [{                  #  список правил
       Action    = "sts:AssumeRole"
-      Effect = "Allow"
+      Effect    = "Allow"
       Principal = { Service = "ec2.amazonaws.com" } # кто может эту роль использовать, в т.ч инстансы ec2s
 
     }]

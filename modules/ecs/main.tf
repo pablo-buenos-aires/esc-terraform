@@ -166,15 +166,15 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
       secrets = [
         {
           name      = "DB_USER"
-          valueFrom = "${data.aws_secretsmanager_secret.db_credentials.arn}:username::"
+          valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:username::"
         },
         {
           name      = "DB_PASSWORD"
-          valueFrom = "${data.aws_secretsmanager_secret.db_credentials.arn}:password::"
+          valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:password::"
         },
         {
           name      = "DB_NAME"
-          valueFrom = "${data.aws_secretsmanager_secret.db_credentials.arn}:dbname::"
+          valueFrom = "${data.aws_secretsmanager_secret_version.db_credentials.arn}:dbname::"
         }
       ]
 
@@ -215,6 +215,10 @@ resource "aws_ecs_service" "ecs_service" {
 # секрет с учётными данными базы
 data "aws_secretsmanager_secret" "db_credentials" {
   name = "db_credentials"  # точное имя как в консоли
+}
+
+data "aws_secretsmanager_secret_version" "db_credentials" {
+  secret_id = data.aws_secretsmanager_secret.db_credentials.id
 }
 # resource "aws_secretsmanager_secret" "db_credentials" { # секрет с учётными данными БД
 #   name = "db_credentials"
