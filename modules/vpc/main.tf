@@ -92,6 +92,7 @@ resource "aws_security_group" "endpoint_sg" { # для SSM endpoints
   }
 }
 
+
 # ---------------------------------------------------------------------------------------- маршруты
 resource "aws_route_table" "rt_pub" { # марш. таблица для публичной подсети
   vpc_id = aws_vpc.main_vpc.id

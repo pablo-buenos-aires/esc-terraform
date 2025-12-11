@@ -8,7 +8,3 @@ variable "iam_user" {
   default     = "pablo"
 }
 
-required_providers {
-  aws = {  source   = "hashicorp/aws",  version = "~> 6.15"  }
-  random = { source = "hashicorp/random", version = "~> 3.6" }
-}

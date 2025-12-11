@@ -28,12 +28,12 @@ resource "aws_security_group" "rds_sg" {
 }
 
 # Subnet group для RDS
-resource "aws_db_subnet_group" "this" {
-  name       = "dbsubnet-group"
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = "db-subnet-group"
   subnet_ids = var.private_subnet_ids
 }
 # Сам RDS Postgres
-resource "aws_db_instance" "this" {
+resource "aws_db_instance" "db_instance" {
   identifier = var.db_identifier
 
   engine         = "postgres"
@@ -47,7 +47,7 @@ resource "aws_db_instance" "this" {
   username = local.db_creds.username
   password = local.db_creds.password
 
-  db_subnet_group_name   = aws_db_subnet_group.this.name
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
   # Приватный инстанс
