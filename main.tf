@@ -25,8 +25,8 @@ resource "aws_security_group" "ecs_sg" { # для ECS tasks
   vpc_id            = module.vpc.vpc_id
   # Пускаем трафик на 8080 только от ALB
   ingress {
-    from_port       = module.ecs.service_port
-    to_port         = module.ecs.service_port
+    from_port       = var.service_port
+    to_port         = var.service_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
@@ -72,11 +72,17 @@ module "ecs" {
   vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   public_subnet_ids  = module.vpc.public_subnet_ids
+   
+  ecs_sg_id = aws_security_group.ecs_sg.id
+  alb_sg_id = aws_security_group.alb_sg.id
 
-
-  db_host = module.rds.db_host
-  db_port = module.rds.db_port
+  db_host = module.rds.rds_endpoint
+  db_port = module.rds.rds_port
+  
+  service_port = var.service_port
   # зашито desired_count 1, имена кластера, службы, алб, логи зашиты в variables.tf
+  
+    
 
   ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend"
   image_tag          = "latest"
@@ -91,7 +97,7 @@ module "rds" {
   ecs_sg_id = aws_security_group.ecs_sg.id
 
   db_credentials = "db_credentials" # имя секрета в Secrets Manager
-  
+ 
 }
 
 # --------------------------------------------------------------------- маршрут в нат

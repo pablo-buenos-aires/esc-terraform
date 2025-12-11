@@ -1,11 +1,9 @@
 
-
-
 resource "aws_lb" "alb" {
   name               = var.alb_name
   load_balancer_type = "application"
   internal           = false              # публичный ALB
-  security_groups    = [aws_security_group.alb_sg.id]
+  security_groups    = [var.alb_sg_id]
   subnets            = var.public_subnet_ids # в публичных подсетях
 }
 

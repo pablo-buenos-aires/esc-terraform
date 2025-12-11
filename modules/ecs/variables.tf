@@ -1,3 +1,10 @@
+# БД и другие настройки как env-переменные
+variable "db_host" { type = string }
+variable "db_port" { type = string }
+
+// определяются снаружи модуля
+variable "ecs_sg_id" { type = string }
+variable "alb_sg_id" { type = string }
 
 variable "ecr_repository_url" {  type  = string}
 variable "image_tag" {
@@ -41,7 +48,7 @@ variable "ecs_service_name" {
 
 variable "service_port" {
   type        = number
-  default     = 8080
+
   description = "Порт, на котором работает контейнер и target group"
 }
 
@@ -71,6 +78,3 @@ variable "log_group_name" {
 
 # Секрет с учётными данными базы
 
-# БД и другие настройки как env-переменные
-variable "db_host" { type = string }
-variable "db_port" { type = string }
