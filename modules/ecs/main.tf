@@ -158,7 +158,7 @@ resource "aws_ecs_service" "ecs_service" {
 
   network_configuration {
     subnets          = var.private_subnet_ids  # приватные подсети
-    security_groups  = [aws_security_group.ecs_sg.id]
+    security_groups  = [var.ecs_sg_id]
     assign_public_ip = false
   }
 

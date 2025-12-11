@@ -28,4 +28,7 @@ output "private_routes" {  value = module.vpc.routes_private }
 output "alb_dns_name" {
   value = module.ecs.alb_dns_name
 }
+output "db_internal_endpoint" {
+  value = module.rds.rds_endpoint
+}
 

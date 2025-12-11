@@ -54,7 +54,7 @@ resource "aws_db_instance" "db_instance" {
   publicly_accessible = false
 
   # Простые настройки
-  backup_retention_period = 7
+  backup_retention_period = 0
   skip_final_snapshot     = true
 
   # Multi-AZ опционально
