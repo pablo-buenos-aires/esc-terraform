@@ -13,20 +13,20 @@ module "vpc" {
   vpc_azs = ["sa-east-1a", "sa-east-1b"] # из первого возьмется регион для эндпоинтов ssm
 }
 
-module "ec2" {
-  source   = "./modules/ec2"
-  vpc_cidr = module.vpc.vpc_cidr
-  key_name = aws_key_pair.ssh_aws_key.key_name
+# module "ec2" {
+#   source   = "./modules/ec2"
+#   vpc_cidr = module.vpc.vpc_cidr
+#   key_name = aws_key_pair.ssh_aws_key.key_name
 
-  ami_id = data.aws_ami.ubuntu24_nat.id // образ с  net-persistant
-  // проброс подсетей и групп безопасности
-  public_subnet_ids  = module.vpc.public_subnet_ids
-  private_subnet_ids = module.vpc.private_subnet_ids
+#   ami_id = data.aws_ami.ubuntu24_nat.id // образ с  net-persistant
+#   // проброс подсетей и групп безопасности
+#   public_subnet_ids  = module.vpc.public_subnet_ids
+#   private_subnet_ids = module.vpc.private_subnet_ids
 
-  private_sg_id         = module.vpc.private_sg_id
-  public_sg_id          = module.vpc.public_sg_id
-  instance_profile_name = aws_iam_instance_profile.ssm_profile.name # профиль от роли SSM
-}
+#   private_sg_id         = module.vpc.private_sg_id
+#   public_sg_id          = module.vpc.public_sg_id
+#   instance_profile_name = aws_iam_instance_profile.ssm_profile.name # профиль от роли SSM
+# }
 
 module "ecs" {
   source             = "./modules/ecs"
@@ -63,11 +63,11 @@ module "rds" {
 }
 
 # --------------------------------------------------------------------- маршрут в нат
-resource "aws_route" "private_nat_route" {
-  route_table_id         = module.vpc.route_table_private # Берем из output VPC
-  destination_cidr_block = "0.0.0.0/0"
-  network_interface_id   = module.ec2.nat_network_interface_id # Берем из output EC2
-}
+# resource "aws_route" "private_nat_route" {
+#   route_table_id         = module.vpc.route_table_private # Берем из output VPC
+#   destination_cidr_block = "0.0.0.0/0"
+#   network_interface_id   = module.ec2.nat_network_interface_id # Берем из output EC2
+# }
 
 
 # -------------------------------------------------------------------- ключи здесь оставим
