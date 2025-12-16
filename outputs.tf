@@ -13,13 +13,16 @@ output "private_subnet_ids" {  value = module.vpc.private_subnet_ids }
 #output "instance_profile_name_ec2" { value = module.ec2.instance_profile_name }
 
 # output "public_instance_id"  { value = aws_instance.pub_ubuntu.id } # id инстанса
-# output "private_instance_id_1"  { value = aws_instance.priv_ubuntu_1.id } # id инстанса 2
+// output "private_instance_id"  { value =  module.ec2.private_instance_id } # id инстанса 2
 # output "private_instance_id_2"  { value = aws_instance.priv_ubuntu_2.id } # id инстанса 2
 
 #output "public_dns"   { value = module.ec2.public_dns } # DNS
 
 #output "public_instance_id" { value = module.ec2.public_instance_id }
 #output "nat_network_interface_id" { value = module.ec2.nat_network_interface_id }
+
+output "nat_gateway_id" { value = module.vpc.nat_gateway_id }
+output "nat_eip" { value = module.vpc.nat_eip }
 
 output "private_route_table" {  value = module.vpc.route_table_private}
 

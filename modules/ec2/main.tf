@@ -12,61 +12,61 @@ resource "aws_instance" "private_ubuntu" { # создаем инстанс
   iam_instance_profile = var.instance_profile_name
 }
 
-resource "aws_instance" "pub_ubuntu" { # создаем инстанс
-  #ami                    = data.aws_ami.ubuntu_24.id
-  ami = var.ami_id
-  instance_type  = var.instance_type
+# resource "aws_instance" "pub_ubuntu" { # создаем инстанс
+#   #ami                    = data.aws_ami.ubuntu_24.id
+#   ami = var.ami_id
+#   instance_type  = var.instance_type
 
-  subnet_id = var.public_subnet_ids[0] # в публичной подсети
-  vpc_security_group_ids = [var.public_sg_id] # группа безопасности
-  key_name   = var.key_name # SSH ключ
-  associate_public_ip_address = true # выделение внешнего IP
-  source_dest_check = false #n чтобы работал NAT
+#   subnet_id = var.public_subnet_ids[0] # в публичной подсети
+#   vpc_security_group_ids = [var.public_sg_id] # группа безопасности
+#   key_name   = var.key_name # SSH ключ
+#   associate_public_ip_address = true # выделение внешнего IP
+#   source_dest_check = false #n чтобы работал NAT
 
-  iam_instance_profile = var.instance_profile_name
+#   iam_instance_profile = var.instance_profile_name
 
-  # user_data = file("${path.module}/user_data_public.sh")
-  # в образе уже установили софт
-  user_data =  <<-EOF
-#!/bin/bash -xe
-exec > /var/log/user-data.log 2>&1
+#   # user_data = file("${path.module}/user_data_public.sh")
+#   # в образе уже установили софт
+#   user_data =  <<-EOF
+# #!/bin/bash -xe
+# exec > /var/log/user-data.log 2>&1
 
-# Включаем форвардинг и делаем это постоянным
-sysctl -w net.ipv4.ip_forward=1
-echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-nat.conf #  reboot-safe
-sysctl --system
+# # Включаем форвардинг и делаем это постоянным
+# sysctl -w net.ipv4.ip_forward=1
+# echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-nat.conf #  reboot-safe
+# sysctl --system
 
-# CIDR подставит terraform
-VPC_CIDR="${var.vpc_cidr}"
+# # CIDR подставит terraform
+# VPC_CIDR="${var.vpc_cidr}"
 
-# Аккуратно берём внешний интерфейс по default route (IPv4)
-EXT_IF="$(ip -o -4 route show to default | awk '{print $5}' | head -n1)"
+# # Аккуратно берём внешний интерфейс по default route (IPv4)
+# EXT_IF="$(ip -o -4 route show to default | awk '{print $5}' | head -n1)"
 
-# Добавляем MASQUERADE, если ещё нет (чтобы не дублировать)
-if ! iptables -t nat -C POSTROUTING -s "$VPC_CIDR" -o "$EXT_IF" -j MASQUERADE 2>/dev/null; then
-  iptables -t nat -A POSTROUTING -s "$VPC_CIDR" -o "$EXT_IF" -j MASQUERADE
-fi
-#
-netfilter-persistent save
-systemctl enable --now netfilter-persistent
-EOF
-} 
+# # Добавляем MASQUERADE, если ещё нет (чтобы не дублировать)
+# if ! iptables -t nat -C POSTROUTING -s "$VPC_CIDR" -o "$EXT_IF" -j MASQUERADE 2>/dev/null; then
+#   iptables -t nat -A POSTROUTING -s "$VPC_CIDR" -o "$EXT_IF" -j MASQUERADE
+# fi
+# #
+# netfilter-persistent save
+# systemctl enable --now netfilter-persistent
+# EOF
+# } 
 
-# ---------------------------------------------------------- два приватный инстанса в разных зонах доступности
-# шаблон без привязки к подсетям
-# resource "aws_launch_template" "l_templ" {
-#   name_prefix = "l-templ"
-#   #image_id    = data.aws_ami.ubuntu_24.id
-#   image_id = "ami-0cdd87dc388f1f6e1"
-#   instance_type = var.instance_type
-#   #key_name = aws_key_pair.ssh_aws_key.key_name
-#   key_name = var.key_name
-#  # нужен блок
-#   iam_instance_profile { name = var.instance_profile_name }
-#   vpc_security_group_ids = [var.private_sg_id]
+# # ---------------------------------------------------------- два приватный инстанса в разных зонах доступности
+# # шаблон без привязки к подсетям
+# # resource "aws_launch_template" "l_templ" {
+# #   name_prefix = "l-templ"
+# #   #image_id    = data.aws_ami.ubuntu_24.id
+# #   image_id = "ami-0cdd87dc388f1f6e1"
+# #   instance_type = var.instance_type
+# #   #key_name = aws_key_pair.ssh_aws_key.key_name
+# #   key_name = var.key_name
+# #  # нужен блок
+# #   iam_instance_profile { name = var.instance_profile_name }
+# #   vpc_security_group_ids = [var.private_sg_id]
 
-#   #network_interfaces { security_groups = [aws_security_group.private_sg.id] }
-# }
+# #   #network_interfaces { security_groups = [aws_security_group.private_sg.id] }
+# # }
 
 
 # -------------------------------------------------------------------------- Asg

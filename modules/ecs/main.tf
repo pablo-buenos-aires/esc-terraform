@@ -36,19 +36,19 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# # Основной HTTPS listener
-# resource "aws_lb_listener" "https" {
-#   load_balancer_arn = aws_lb.alb.arn
-#   port              = 443
-#   protocol          = "HTTPS"
-#   ssl_policy        = "ELBSecurityPolicy-2016-08"
-#   certificate_arn   = var.acm_certificate_arn # передашь из ACM
+# Основной HTTPS listener
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.acm_certificate_arn # передашь из ACM
 
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.alb_tg.arn
-#   }
-# }
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.alb_tg.arn
+  }
+}
 
 data "aws_iam_policy_document" "ecs_task_assume_role" {
   statement {

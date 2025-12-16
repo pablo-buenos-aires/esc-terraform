@@ -76,5 +76,9 @@ variable "log_group_name" {
   description = "Имя лог-группы CloudWatch"
 }
 
-# Секрет с учётными данными базы
+
+variable "acm_certificate_arn" {
+  type        = string
+  description = "Сертификат для HTTPS в ALB"
+}
 
