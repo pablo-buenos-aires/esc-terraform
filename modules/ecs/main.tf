@@ -59,8 +59,8 @@ data "aws_iam_policy_document" "ecs_task_assume_role" {
     }
   }
 }
-# ------------------------------- IAM роли для ECS tasks
-# Роль приложения (taskRoleArn)
+# ------------------------------------------------------------- IAM роли для ECS tasks
+# Роль приложения (taskRoleArn), 
 resource "aws_iam_role" "task_role" {
   name               = "ecsAppTaskRole"  # <-- важно: совпадает с ARN в task definition
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
@@ -71,30 +71,45 @@ resource "aws_iam_role" "task_execution_role" {
   name               = "ecsTaskExecutionRole"  # <-- совпадает с task definition
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
-
+# ------------------------------------------------------------ Политики
+# Прикоепляем политику к роли execution role, стандартная от AWS
 resource "aws_iam_role_policy_attachment" "task_execution_policy" {
   role       = aws_iam_role.task_execution_role.name
   # Политика позволяет таскам качать образы из ECR, писать логи в CloudWatch и т.п.
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# IAM политика для доступа к S3 из приложения в ECS task
+data "aws_iam_policy_document" "task_s3_policy" {
+  statement {
+    sid = "S3ObjectReadWriteDelete"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      "arn:aws:s3:::${var.s3_bucket_photos_name}/*"
+    ]
+  }
+}
+# прикрепляем inline политику сразу к роли приложения (ecsAppTaskRole), без aws_iam_role_policy_attachment
+resource "aws_iam_role_policy" "task_s3" {
+  name   = "ecsAppTaskRole-s3"
+  role   = aws_iam_role.task_role.id
+  policy = data.aws_iam_policy_document.task_s3_policy.json
+}
 
-# Здесь повесить политики для приложения, если нужны права на S3 для бэка
-# Пример:
-# resource "aws_iam_role_policy" "task_app_policy" {
-#   name = "ecsAppTaskInlinePolicy"
-#   role = aws_iam_role.task_role.id
-#
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Effect = "Allow"
-#         Action = ["secretsmanager:GetSecretValue"]
-#         Resource = "arn:aws:secretsmanager:sa-east-1:836940249137:secret:db-credentials-*"
-#       }
-#     ]
-#   })
+# # Create a customer-managed IAM policy from the document
+# resource "aws_iam_policy" "task_s3" {
+#   name        = "ecsAppTaskRole-s3"
+#   policy      = data.aws_iam_policy_document.task_s3_policy.json
+# }
+
+# # Attach the managed policy to the application role
+# resource "aws_iam_role_policy_attachment" "task_role_s3_attach" {
+#   role       = aws_iam_role.task_role.name
+#   policy_arn = aws_iam_policy.task_s3.arn
 # }
 
 //------------------------------- cluster, task definition и service  для ECS Fargate

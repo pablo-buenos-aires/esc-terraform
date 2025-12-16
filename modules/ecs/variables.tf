@@ -82,3 +82,6 @@ variable "acm_certificate_arn" {
   description = "Сертификат для HTTPS в ALB"
 }
 
+variable "s3_bucket_photos_name" {
+  type = string
+}

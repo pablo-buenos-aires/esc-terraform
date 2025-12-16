@@ -41,14 +41,11 @@ module "ecs" {
   db_port = module.rds.rds_port
  
   service_port = module.vpc.service_port // для sg_ecs
-  acm_certificate_arn = "arn:aws:acm:sa-east-1:836940249137:certificate/5f599248-5fa2-4a69-871f-6129f4513c3b"
-  # зашито desired_count 1, имена кластера, службы, алб, логи зашиты в variables.tf
-   
-    
-
   ecr_repository_url = "836940249137.dkr.ecr.sa-east-1.amazonaws.com/go-backend"
   image_tag          = "latest"
-  # acm_certificate_arn = "arn:aws:acm:sa-east-1:836940249137:certificate/your-certificate-id"
+
+  acm_certificate_arn = "arn:aws:acm:sa-east-1:836940249137:certificate/5f599248-5fa2-4a69-871f-6129f4513c3b"
+  s3_bucket_photos_name = "photos-bucket666"
 }
 
 module "rds" {
