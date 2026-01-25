@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+  external_labels:
+    run: "r2"
+
+scrape_configs:
+  - job_name: backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['127.0.0.1:8080']
+
+remote_write:
+  - url: https://aps-workspaces.sa-east-1.amazonaws.com/workspaces/ws-11f83747-4878-4580-adca-fcf4f61fd027/api/v1/remote_write
+    sigv4:
+      region: sa-east-1

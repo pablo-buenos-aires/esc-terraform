@@ -21,8 +21,8 @@ output "private_subnet_ids" {  value = module.vpc.private_subnet_ids }
 #output "public_instance_id" { value = module.ec2.public_instance_id }
 #output "nat_network_interface_id" { value = module.ec2.nat_network_interface_id }
 
-output "nat_gateway_id" { value = module.vpc.nat_gateway_id }
-output "nat_eip" { value = module.vpc.nat_eip }
+//output "nat_gateway_id" { value = module.vpc.nat_gateway_id }
+//output "nat_eip" { value = module.vpc.nat_eip }
 
 output "private_route_table" {  value = module.vpc.route_table_private}
 

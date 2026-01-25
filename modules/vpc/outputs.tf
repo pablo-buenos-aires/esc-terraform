@@ -24,8 +24,8 @@ output "public_subnet_ids" { value  = aws_subnet.public_subnet[*].id }
 output "private_subnet_ids" {  value = aws_subnet.private_subnet[*].id }
 output "private_rt_ass_ids" {  value = aws_route_table_association.rt_priv_ass[*].id }
 
-output "nat_gateway_id" { value = aws_nat_gateway.nat_gw }
-output "nat_eip" { value = aws_eip.nat_eip.public_ip }
+//output "nat_gateway_id" { value = aws_nat_gateway.nat_gw }
+//output "nat_eip" { value = aws_eip.nat_eip.public_ip }
 
 # таблицы и маршруты
 output "route_table_public" { value  = aws_route_table.rt_pub.id }

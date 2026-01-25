@@ -31,24 +31,29 @@ resource "aws_subnet" "private_subnet" {
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.vpc_azs[count.index]
 }
-
-
+#---------------------------
 resource "aws_internet_gateway" "igw" { vpc_id = aws_vpc.main_vpc.id } # IGW для доступа VPC в интернет
 # NAT gateway и EIP для него
-resource "aws_eip" "nat_eip" {
-  domain = "vpc"
-  depends_on = [aws_internet_gateway.igw]
-  tags = { Name = "nat-eip" }
-}
-resource "aws_nat_gateway" "nat_gw" {
-  # allocation_id = aws_eip.nat_eip.id
-  allocation_id = aws_eip.nat_eip.allocation_id
+# resource "aws_eip" "nat_eip" {
+#   domain = "vpc"
+#   depends_on = [aws_internet_gateway.igw]
+#   tags = { Name = "nat-eip" }
+# }
+# resource "aws_nat_gateway" "nat_gw" {
+#   # allocation_id = aws_eip.nat_eip.id
+#   allocation_id = aws_eip.nat_eip.allocation_id
 
-  subnet_id     = aws_subnet.public_subnet[0].id # в 1 публичной подсети
-  tags = { Name = "nat-gateway" }
-  depends_on = [aws_internet_gateway.igw]
-}
-# -------------------------------------------------------------------------------------------  bastion/nat SG
+#   subnet_id     = aws_subnet.public_subnet[0].id # в 1 публичной подсети
+#   tags = { Name = "nat-gateway" }
+#   depends_on = [aws_internet_gateway.igw]
+# }
+# # исходящий трафик приватных подсетей через NAT
+# resource "aws_route" "rt_priv_route" { 
+#   route_table_id         = aws_route_table.rt_priv.id
+#   destination_cidr_block = "0.0.0.0/0"
+#   nat_gateway_id         = aws_nat_gateway.nat_gw.id
+# }
+# ------------------------------------------------------------------------------  bastion/nat SG
 resource "aws_security_group" "alb_sg" { # для ALB
    vpc_id       = aws_vpc.main_vpc.id
    ingress { 
@@ -184,12 +189,6 @@ resource "aws_route_table" "rt_pub" { # марш. таблица для публ
 }
 
 resource "aws_route_table" "rt_priv" { vpc_id = aws_vpc.main_vpc.id }
-# исходящий трафик приватных подсетей через NAT
-resource "aws_route" "rt_priv_route" { 
-  route_table_id         = aws_route_table.rt_priv.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat_gw.id
-}
 
 
 # связь приватных таблиц с подсетями

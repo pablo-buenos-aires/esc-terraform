@@ -31,8 +31,13 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.alb_tg.arn
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 
@@ -80,37 +85,45 @@ resource "aws_iam_role_policy_attachment" "task_execution_policy" {
 }
 
 # IAM политика для доступа к S3 из приложения в ECS task
-data "aws_iam_policy_document" "task_s3_policy" {
+data "aws_iam_policy_document" "task_s3_policy_document" {
   statement {
     sid = "S3ObjectReadWriteDelete"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject"
-    ]
-    resources = [
-      "arn:aws:s3:::${var.s3_bucket_photos_name}/*"
-    ]
+    actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["arn:aws:s3:::${var.s3_bucket_photos_name}/*"]
   }
 }
+
 # прикрепляем inline политику сразу к роли приложения (ecsAppTaskRole), без aws_iam_role_policy_attachment
 resource "aws_iam_role_policy" "task_s3" {
   name   = "ecsAppTaskRole-s3"
   role   = aws_iam_role.task_role.id
-  policy = data.aws_iam_policy_document.task_s3_policy.json
+  policy = data.aws_iam_policy_document.task_s3_policy_document.json
 }
 
-# # Create a customer-managed IAM policy from the document
-# resource "aws_iam_policy" "task_s3" {
-#   name        = "ecsAppTaskRole-s3"
-#   policy      = data.aws_iam_policy_document.task_s3_policy.json
-# }
+# секрет с учётными данными базы
+data "aws_secretsmanager_secret" "db_credentials" {
+  name = "db_credentials"  # точное имя как в консоли
+}
 
-# # Attach the managed policy to the application role
-# resource "aws_iam_role_policy_attachment" "task_role_s3_attach" {
-#   role       = aws_iam_role.task_role.name
-#   policy_arn = aws_iam_policy.task_s3.arn
-# }
+data "aws_secretsmanager_secret_version" "db_credentials" {
+  secret_id = data.aws_secretsmanager_secret.db_credentials.id
+}
+
+# IAM политика для тасков ECS, чтобы читать секреты из Secrets Manager
+data "aws_iam_policy_document" "execution_read_secrets" {
+  statement {
+    sid     = "ReadDbCredentialsSecret"
+    effect  = "Allow"
+    actions = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+    resources = [data.aws_secretsmanager_secret.db_credentials.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "task_execution_read_secrets" {
+  name   = "ecsTaskExecutionRole-read-secrets"
+  role   = aws_iam_role.task_execution_role.id
+  policy = data.aws_iam_policy_document.execution_read_secrets.json
+}
 
 //------------------------------- cluster, task definition и service  для ECS Fargate
 resource "aws_ecs_cluster" "ecs_cluster" {
@@ -212,48 +225,5 @@ resource "aws_ecs_service" "ecs_service" {
   }
 }
 
-# секрет с учётными данными базы
-data "aws_secretsmanager_secret" "db_credentials" {
-  name = "db_credentials"  # точное имя как в консоли
-}
 
-data "aws_secretsmanager_secret_version" "db_credentials" {
-  secret_id = data.aws_secretsmanager_secret.db_credentials.id
-}
-# resource "aws_secretsmanager_secret" "db_credentials" { # секрет с учётными данными БД
-#   name = "db_credentials"
-# }
 
-# resource "aws_secretsmanager_secret_version" "db_credentials_version" { # версия секрета с учётными данными БД
-#   secret_id     = aws_secretsmanager_secret.db_credentials.id
-#   secret_string = jsonencode({
-#     username = "db_admin"
-#     password = "12345678"
-#     dbname   = "userdb"
-#   })
-# }
-
-# IAM политика для тасков ECS, чтобы читать секреты из Secrets Manager
-resource "aws_iam_policy" "task_read_db_secret" {
-  name        = "ecs-task-read-db-secret"
-  description = "Allow ECS tasks to read DB credentials from Secrets Manager"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
-        ]
-        Resource = data.aws_secretsmanager_secret.db_credentials.arn
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "task_execution_read_db_secret" {
-  role       = aws_iam_role.task_execution_role.name
-  policy_arn = aws_iam_policy.task_read_db_secret.arn
-}

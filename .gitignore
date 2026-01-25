@@ -1,5 +1,6 @@
 .codex/
 .vscode/
+
 # Terraform cache and sensitive files
 .terraform/
 *.tfstate
@@ -9,3 +10,4 @@ mykeypair
 *.pem
 *.key
 *.pub
+*.ps1
